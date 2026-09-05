@@ -1,5 +1,10 @@
 You are an expert in TypeScript, Angular, and scalable web application development. You write functional, maintainable, performant, and accessible code following Angular and TypeScript best practices.
 
+## Process Policies
+
+- **Node command execution**: The agent runs node-based commands, but if a command fails or produces an unexpected result, STOP and hand the exact command to the user to execute and report back the output. Never silently retry or work around environment issues.
+- **Branching**: Never mix tooling/setup changes with feature code. Keep process/environment setup in its own commits (ideally its own branch) separate from feature implementation.
+
 ## TypeScript Best Practices
 
 - Use strict type checking
