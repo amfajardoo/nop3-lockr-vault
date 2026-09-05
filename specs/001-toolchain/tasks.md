@@ -87,8 +87,8 @@ test/build gates.
 
 ### Implementation for User Story 3
 
-- [ ] T010 [US3] Verify offline capability per `quickstart.md` Scenario 4: with the network disconnected, run `pnpm check` and confirm it exits 0 (no remote fetches)
-- [ ] T011 [US3] Update `README.md` command reference per `contracts/toolchain-cli.md` §1 + `plan.md`: document `format`, `check`, `check:fix`, `check:format`, `verify`, and the Biome install/setup note
+- [x] T010 [US3] Verify offline capability per `quickstart.md` Scenario 4: with the network disconnected, run `pnpm check` and confirm it exits 0 (no remote fetches)
+- [x] T011 [US3] Update `README.md` command reference per `contracts/toolchain-cli.md` §1 + `plan.md`: document `format`, `check`, `check:fix`, `check:format`, `verify`, and the Biome install/setup note
 
 **Checkpoint**: All user stories are now independently functional
 
@@ -98,8 +98,8 @@ test/build gates.
 
 **Purpose**: Final validation sweep against SC-001…SC-004
 
-- [ ] T012 Run every `quickstart.md` scenario (1-5) end-to-end and confirm expected outcomes; run `pnpm verify` one final time on a clean tree
-- [ ] T013 Confirm FR-009: `biome.json` excludes all generated artifacts and a `git status --short` after `pnpm verify` shows no stray files (only expected build outputs, ignored)
+- [x] T012 Run every `quickstart.md` scenario (1-5) end-to-end and confirm expected outcomes; run `pnpm verify` one final time on a clean tree
+- [x] T013 Confirm FR-009: `biome.json` excludes all generated artifacts and a `git status --short` after `pnpm verify` shows no stray files (only expected build outputs, ignored)
 
 ---
 
