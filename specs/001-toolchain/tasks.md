@@ -30,7 +30,7 @@ test/build gates.
 
 **Purpose**: Install the single tool that powers all gates
 
-- [ ] T001 Add `@biomejs/biome@2.5.12` as an exact-pinned devDependency in `package.json` and run `pnpm install` to update `pnpm-lock.yaml`
+- [x] T001 Add `@biomejs/biome@2.5.12` as an exact-pinned devDependency in `package.json` and run `pnpm install` to update `pnpm-lock.yaml`
 
 ---
 
@@ -40,10 +40,10 @@ test/build gates.
 
 **CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T002 Create `biome.json` per `research.md` Decision 1/4: `$schema` (2.5.12), `files.ignore` (`dist/`, `node_modules/`, `.angular/`, `coverage/`, `playwright-report/`, `test-results/`), `formatter` (space, 2, 100), `linter` (recommended + Angular overrides per research), `organizeImports`, `vcs` (git, useIgnoreFile)
-- [ ] T003 Align TypeScript configs per `research.md` Decision 3: move shared strict options into `tsconfig.json` (root) and make `tsconfig.app.json` + `tsconfig.spec.json` extend it with only app/spec-specific fields
-- [ ] T004 Remove Prettier per `spec.md` FR-004: delete `prettier` from `package.json` devDependencies (update lockfile), delete `.prettierrc`, and run `git grep -in prettier` to confirm zero references in code/configs/docs
-- [ ] T005 Add toolchain scripts to `package.json` per `contracts/toolchain-cli.md` §1: `format` (`biome format --write .`), `check` (`biome check .`), `check:fix` (`biome check --write .`), `check:format` (`biome ci .`), `verify` (`biome ci . && pnpm test && pnpm build`); keep existing `start`/`test`/`build`
+- [x] T002 Create `biome.json` per `research.md` Decision 1/4: `$schema` (2.5.12), `files.ignore` (`dist/`, `node_modules/`, `.angular/`, `coverage/`, `playwright-report/`, `test-results/`), `formatter` (space, 2, 100), `linter` (recommended + Angular overrides per research), `organizeImports`, `vcs` (git, useIgnoreFile)
+- [x] T003 Align TypeScript configs per `research.md` Decision 3: move shared strict options into `tsconfig.json` (root) and make `tsconfig.app.json` + `tsconfig.spec.json` extend it with only app/spec-specific fields
+- [x] T004 Remove Prettier per `spec.md` FR-004: delete `prettier` from `package.json` devDependencies (update lockfile), delete `.prettierrc`, and run `git grep -in prettier` to confirm zero references in code/configs/docs
+- [x] T005 Add toolchain scripts to `package.json` per `contracts/toolchain-cli.md` §1: `format` (`biome format --write .`), `check` (`biome check .`), `check:fix` (`biome check --write .`), `check:format` (`biome ci .`), `verify` (`biome ci . && pnpm test && pnpm build`); keep existing `start`/`test`/`build`
 
 **Checkpoint**: Foundation ready — user story demonstration can now begin
 
@@ -57,8 +57,8 @@ test/build gates.
 
 ### Implementation for User Story 1
 
-- [ ] T006 [US1] Run `pnpm verify` and fix any findings it surfaces (format/lint on existing scaffold files, e.g. `src/app/app.spec.ts`); confirm exit 0 and all gates green
-- [ ] T007 [US1] Negatively test the gate per `quickstart.md` Scenario 2: introduce a deliberate lint violation in `src/app/app.ts`, run `pnpm check`, confirm non-zero exit + `file:line`/rule output, then revert
+- [x] T006 [US1] Run `pnpm verify` and fix any findings it surfaces (format/lint on existing scaffold files, e.g. `src/app/app.spec.ts`); confirm exit 0 and all gates green
+- [x] T007 [US1] Negatively test the gate per `quickstart.md` Scenario 2: introduce a deliberate lint violation in `src/app/app.ts`, run `pnpm check`, confirm non-zero exit + `file:line`/rule output, then revert
 
 **Checkpoint**: At this point, User Story 1 is fully functional and testable independently
 
@@ -72,8 +72,8 @@ test/build gates.
 
 ### Implementation for User Story 2
 
-- [ ] T008 [US2] Run `pnpm check --write .` then `pnpm format` across the repo per `quickstart.md` Scenario 3; confirm the working tree is canonical
-- [ ] T009 [US2] Verify idempotency: run `pnpm format` a second time and confirm `git diff` shows no additional changes
+- [x] T008 [US2] Run `pnpm check --write .` then `pnpm format` across the repo per `quickstart.md` Scenario 3; confirm the working tree is canonical
+- [x] T009 [US2] Verify idempotency: run `pnpm format` a second time and confirm `git diff` shows no additional changes
 
 **Checkpoint**: At this point, User Stories 1 AND 2 both work independently
 
