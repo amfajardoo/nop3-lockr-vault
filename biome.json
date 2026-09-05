@@ -6,13 +6,14 @@
 		"useIgnoreFile": true
 	},
 	"files": {
-		"ignore": [
-			"dist",
-			"node_modules",
-			".angular",
-			"coverage",
-			"playwright-report",
-			"test-results"
+		"includes": [
+			"**",
+			"!**/dist",
+			"!**/node_modules",
+			"!**/.angular",
+			"!**/coverage",
+			"!**/playwright-report",
+			"!**/test-results"
 		]
 	},
 	"formatter": {
