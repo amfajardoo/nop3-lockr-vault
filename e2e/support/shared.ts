@@ -1,9 +1,19 @@
 import { expect, type Page } from "@playwright/test";
 
+interface AxeRunOptions {
+  runOnly?: {
+    type: string;
+    values: string[];
+  };
+}
+
 declare global {
   interface Window {
     axe: {
-      run(context: Element | Document): Promise<{
+      run(
+        context: Element | Document,
+        options?: AxeRunOptions,
+      ): Promise<{
         violations: Array<{ impact: string | null }>;
       }>;
     };

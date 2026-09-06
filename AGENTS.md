@@ -101,3 +101,23 @@ be strengthened.
   the spec that owns them.
 - A spec builds a `TranslatorRegistry` for its own step catalog, composing shared actions; the `Record` type
   forces a translator for every statement in the catalog.
+
+### Component testing (Playwright CT)
+
+- Run component tests with `pnpm e2e:components` (`playwright test --config=playwright-ct.config.ts`). The suite
+  targets **real browsers** through a Vite dev server (port 5173, `strictPort`) and the Playwright **gallery**:
+  stories are served at `http://localhost:5173/playwright/gallery/index.html`, and each `mount()` navigates there.
+- A story (`*.story.ts`) lives next to its component and exports the component type (or a wrapper component) under
+  named exports. Reference it from a spec by the story id following the path-based convention:
+  `<src relative path without .story> + /<export>`, e.g. `app/theme-toggle/theme-toggle/Primary`.
+- Write specs under `tests/components/<component>.spec.ts` using the built-in `mount` fixture (returns a Locator;
+  scope queries from it, not from `page`). Keep state isolated: `beforeEach` clears `localStorage` (via the Vite
+  origin) because the browser context is reused (`reuseContext: true`).
+- JIT components with `templateUrl`/`styleUrl` do NOT auto-resolve under Vite: register raw resources through
+  `import.meta.glob` with `?raw` in `playwright/gallery/vite.component-resource.ts` and resolve them with
+  `ɵresolveComponentResources` **before** `createApplication()`. Add new templates there when introducing a
+  component with external template/style files.
+- Vite serves the gallery with `vite.ct.config.ts` (TS path aliases for Vite resolution). The gallery wiring lives
+  in `playwright/gallery/`; the web server is owned by `playwright-ct.config.ts`. Keep `vite` and the spec tree
+  type-checked: `playwright/tsconfig.json` and `tests/tsconfig.json`, both referenced from the root `tsconfig.json`.
+- Every CT spec must pass the same **mutant check** as unit and e2e tests.

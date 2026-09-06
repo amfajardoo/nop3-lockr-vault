@@ -14,7 +14,8 @@
     "check:fix": "biome check --write .",
     "check:format": "biome ci .",
     "verify": "biome ci . && pnpm test && pnpm build",
-    "e2e": "ng e2e"
+    "e2e": "ng e2e",
+    "e2e:components": "playwright test --config=playwright-ct.config.ts"
   },
   "private": true,
   "packageManager": "pnpm@11.20.0",
@@ -43,6 +44,7 @@
     "postcss": "^8.5.3",
     "tailwindcss": "^4.1.12",
     "typescript": "~6.0.2",
+    "vite": "^8.1.5",
     "vitest": "^4.0.8"
   }
 }
