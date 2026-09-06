@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lockr-vault.dev/schemas/theme-choice.schema.json",
+  "title": "ThemeChoice",
+  "description": "The persisted theme preference value stored under the 'lockr.theme' key in plain device storage. Valid explicit choices are 'light' and 'dark'; 'system' explicitly means 'follow the OS preference'. Any other value (or a missing/malformed value) MUST be treated as absent and resolved to the OS preference at boot, never crashing the first paint.",
+  "type": "string",
+  "enum": ["light", "dark", "system"]
+}

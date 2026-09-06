@@ -1,3 +1,59 @@
-/* You can add global styles to this file, and also import other style files */
-
 @import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  color-scheme: light;
+
+  --surface: #ffffff;
+  --surface-raised: #f1f5f9;
+  --foreground: #0f172a;
+  --muted: #475569;
+  --accent: #2563eb;
+  --on-accent: #ffffff;
+  --line: #64748b;
+  --line-subtle: #e2e8f0;
+  --success: #15803d;
+  --warning: #b45309;
+  --error: #b91c1c;
+  --info: #1d4ed8;
+}
+
+.dark {
+  color-scheme: dark;
+
+  --surface: #0f172a;
+  --surface-raised: #1e293b;
+  --foreground: #f1f5f9;
+  --muted: #94a3b8;
+  --accent: #818cf8;
+  --on-accent: #0f172a;
+  --line: #64748b;
+  --line-subtle: #334155;
+  --success: #4ade80;
+  --warning: #fbbf24;
+  --error: #f87171;
+  --info: #a5b4fc;
+}
+
+@theme inline {
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-line: var(--line);
+  --color-line-subtle: var(--line-subtle);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  --color-info: var(--info);
+}
+
+@layer base {
+  body {
+    background-color: var(--surface);
+    color: var(--foreground);
+  }
+}
