@@ -7,21 +7,21 @@
 
 ## Goal
 
-Ship the first real UI: a persistent, accessible shell (brand + nav + theme switcher) with
-lazily-loaded Home/About routes, all token-styled, AXE-clean at the component level, with every
-user story proven by automated tests first.
+Ship the first real UI: a persistent, accessible shell (brand + theme switcher + skip link + main
+outlet) on top of the 002 tokens and the 003 `ThemeStore`. Routes and pages are deliberately out of
+scope — `app.routes.ts` stays empty and Home/About arrive with their own feature (spec revision
+2026-09-06).
 
 ## Constitution Conformance
 
-- **Standalone components** — `App` already is; `ThemeToggle`, `Home`, `About` are created
-  standalone (v22 default; no `standalone: true` decorator flag).
+- **Standalone components** — `App` already is; `ThemeToggle` is created standalone (v22 default;
+  no `standalone: true` decorator flag).
 - **Signals** — toggle reads `ThemeStore` signals; no local mutable state; `computed`/`input`/
-  `output` per AGENTS; `RouterTestingHarness` for route specs.
-- **No `@HostBinding`/`@HostListener`** — keyboard logic via template `(keydown)` and the
-  `host` object; no decorators.
+  `output` per AGENTS.
+- **No `@HostBinding`/`@HostListener`** — keyboard logic via template `(keydown)`, no decorators.
 - **Native control flow** — `@if`/`@for` only; no `ngClass`/`ngStyle`.
 - **Token-only colors** — 002 contract; no literals (grep-auditable).
-- **No NgModules** — lazy via `loadComponent`.
+- **No NgModules** — no modules anywhere; routes stay empty for 004.
 - **ProvidedAtRoot services** — `ThemeStore` untouched; component access via `inject(ThemeStore)`.
 - **Tests mandatory** — every US is test-first (constitution: Automated Verifiability); specs shown
   RED before implementation.
@@ -32,46 +32,38 @@ user story proven by automated tests first.
 ```
 src/
   app/
-    app.ts                  # Root shell: header (brand/nav/theme-toggle) + skip link + main[outlet]
+    app.ts                  # Root shell: header (brand/theme-toggle) + skip link + main[outlet]
     app.html
     app.css
-    app.routes.ts           # typed Routes: "" -> lazy Home, "about" -> lazy About, "**" -> ""
-    app.spec.ts             # US1: shell chrome render, nav, skip link, aria-current, AXE
+    app.routes.ts           # typed Routes = [] (pages/routes deferred)
+    app.spec.ts             # US1: shell chrome render, brand, skip link, AXE
     app-tokens.spec.ts      # 002 artifact, unchanged
     theme-toggle/
-      theme-toggle.ts       # Radiogroup switcher over ThemeStore (US2)
+      theme-toggle.ts       # Native-radio radiogroup switcher over ThemeStore (US2)
       theme-toggle.html
       theme-toggle.spec.ts  # US2: options, selection, setChoice sync, keyboard, focus-safety, AXE
-    home/
-      home.ts               # Welcome screen (default route, US3)
-      home.html
-      home.spec.ts          # US2/US3 router coverage entry (lazy resolve + copy)
-    about/
-      about.ts              # About screen (US3)
-      about.html
-      about.spec.ts         # US3 router coverage entry
   theme/                    # 002/003 artifacts unchanged
 ```
 
 ## Strategy
 
 1. T001: confirm green baseline on the branch (`pnpm verify`).
-2. Write the router/lazy spec (US3) and the welcome/About screens, then the shell spec (US1) and
-   the toggle spec (US2) — all REQUIRED to be RED before implementations.
+2. Write the toggle spec (US2) and the shell spec (US1) — both REQUIRED to be RED before their
+   implementations.
 3. User installs `axe-core` (devDependency) before the AXE-scanned specs run green.
-4. Implement in dependency order: routes+Home+About → shell `App` → `ThemeToggle`.
-5. Polish: full `pnpm verify`, chunk assertions on the build, token-color grep.
+4. Implement `App` shell, then `ThemeToggle`.
+5. Polish: full `pnpm verify`, token-color grep, pre-paint assertion on the build output.
 
 ## Dependencies & Sequencing
 
-- `axe-core` must be installed before T006 (AXE specs) turns GREEN; parallel-file tasks (T002/T004/
-  T006) can be written independently.
-- US3 (routes/Home/About) is implemented first because the shell's default route and nav need real
-  targets; US1 depends on US3; US2 depends on nothing but the store (003, already merged).
+- `axe-core` must be installed before T006 (AXE specs) turns GREEN; the two spec files (T004/T006)
+  can be written independently.
+- The shell's `App` and the toggle are independent of any routes (none exist); the toggle depends on
+  003's merged `ThemeStore` only.
 - 005 owns e2e/visual AXE; 004 ships unit-level AXE only (see research D5).
 - No changes under `src/theme/` or `src/index.html` in this feature (FR-010).
 
 ## Deliverables
 
-- Runnable `pnpm verify` (biome + 160+ expected unit tests across suites + build) green on the
-  branch; shell/toggle/route specs all passing; build shows separate Home/About chunks.
+- Runnable `pnpm verify` (biome + full unit suite across suites + build) green on the branch;
+  shell/toggle specs passing; build output keeps the 002 pre-paint script and shows no page chunks.

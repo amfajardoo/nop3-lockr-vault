@@ -1,18 +1,12 @@
-<main class="flex min-h-screen w-full items-center justify-center bg-surface p-6 text-foreground">
-  <section class="w-full max-w-md rounded-2xl border border-line bg-surface-raised p-8">
-    <h1 class="text-foreground">Hello, {{ title() }}</h1>
-    <p class="text-muted">Lockr Vault — token-driven scaffold.</p>
-    <div class="mt-6 flex items-center gap-3">
-      <a
-        class="text-accent"
-        href="https://angular.dev"
-        target="_blank"
-        rel="noopener"
-      >
-        Angular docs
-      </a>
-      <button class="rounded-full bg-accent px-4 py-2 text-on-accent" type="button">Create vault</button>
+<div class="flex min-h-screen flex-col bg-surface text-foreground">
+  <header class="sticky top-0 z-10 border border-line bg-surface">
+    <a class="skip-link sr-only focus:not-sr-only" href="#main-content">Skip to content</a>
+    <div class="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-6 py-4">
+      <a class="brand text-accent" href="/" routerLink="/">{{ title() }}</a>
+      <theme-toggle />
     </div>
+  </header>
+  <main id="main-content" class="mx-auto w-full max-w-5xl flex-1 px-6 py-8 text-muted">
     <router-outlet />
-  </section>
-</main>
+  </main>
+</div>

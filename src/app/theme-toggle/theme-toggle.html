@@ -1,0 +1,26 @@
+<div
+  role="radiogroup"
+  aria-label="Theme"
+  class="flex items-center gap-1 rounded-full border border-line bg-surface-raised p-1"
+  (keydown)="onKeydown($event)"
+>
+  @for (option of options; track option.value) {
+    <label
+      class="cursor-pointer rounded-full px-3 py-1 text-muted focus-within:outline-none focus-within:ring-2 focus-within:ring-accent"
+      [class.bg-accent]="isSelected(option.value)"
+      [class.text-on-accent]="isSelected(option.value)"
+    >
+      <input
+        class="sr-only"
+        type="radio"
+        name="theme-choice"
+        [value]="option.value"
+        [checked]="isSelected(option.value)"
+        [attr.data-theme-option]="option.value"
+        [attr.tabindex]="tabIndexOf(option.value)"
+        (change)="select(option.value)"
+      />
+      <span>{{ option.shortLabel }}</span>
+    </label>
+  }
+</div>

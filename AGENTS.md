@@ -62,3 +62,9 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Use the `providedIn: 'root'` option for singleton services
 - Prefer the `@Service` decorator over `@Injectable({providedIn: 'root'})` for new singleton services (Angular v22+)
 - Use the `inject()` function instead of constructor injection
+
+## Testing
+
+- Structure every test with the AAA pattern: separate the Arrange, Act, and Assert phases with blank lines (no section comments)
+- Reuse the shared test toolkit in `src/testing/` (`setupThemeTestBed`, `createFixture`, `query`, the storage/matchMedia stubs) instead of repeating TestBed and stub setup in every spec
+- Do NOT reset `document.documentElement` classes in `beforeEach`: each fresh `setupThemeTestBed` re-instantiates the store, which re-applies the correct root marker on init

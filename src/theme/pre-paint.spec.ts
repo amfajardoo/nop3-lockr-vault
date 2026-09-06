@@ -1,9 +1,9 @@
 import { readFileSync } from "node:fs";
+import { installThemeMediaQueryStub, installThemeStorage } from "@testing/theme-stubs";
 import {
   CHOICE_DARK,
   CHOICE_LIGHT,
   CHOICE_SYSTEM,
-  DARK_SCHEME_QUERY,
   resolveEffectiveTheme,
   THEME_STORAGE_KEY,
 } from "./theme-contract";
@@ -19,81 +19,6 @@ import {
  */
 
 const indexHtml = readFileSync("src/index.html", "utf8");
-
-/** Minimal MediaQueryList that satisfies the script contracts (only .matches is used). */
-interface PrePaintMediaQueryList {
-  readonly matches: boolean;
-  readonly media: string;
-  readonly onchange: EventListener | null;
-  addListener(): void;
-  removeListener(): void;
-  addEventListener(): void;
-  removeEventListener(): void;
-  dispatchEvent(): boolean;
-}
-
-function createMatchMediaStub(media: string, matches: boolean): PrePaintMediaQueryList {
-  return {
-    matches,
-    media,
-    onchange: null,
-    addListener() {},
-    removeListener() {},
-    addEventListener() {},
-    removeEventListener() {},
-    dispatchEvent() {
-      return false;
-    },
-  };
-}
-
-/** Storage mock backed by a Map, independent of the environment's own storage. */
-function createLocalStorageStub(entries?: Readonly<Record<string, string>>) {
-  const store = new Map<string, string>(Object.entries(entries ?? {}));
-  return {
-    getItem(key: string): string | null {
-      return store.get(key) ?? null;
-    },
-    setItem(key: string, value: string): void {
-      store.set(key, value);
-    },
-    removeItem(key: string): void {
-      store.delete(key);
-    },
-    clear(): void {
-      store.clear();
-    },
-  };
-}
-
-/**
- * Binds a storage mock to the jsdom WINDOW. The browser globals the inline
- * script touches (bare `localStorage`, `window.matchMedia`) resolve on the
- * window of the document jsdom itself evals scripts in, which is NOT the
- * runner's `globalThis`; `vi.stubGlobal` alone would not reach it.
- */
-function installWindowLocalStorage(storage: object): void {
-  const win = document.defaultView;
-  if (!win) {
-    throw new Error("jsdom window is unavailable");
-  }
-  Object.defineProperty(win, "localStorage", {
-    configurable: true,
-    value: storage,
-  });
-}
-
-/** Binds a matchMedia stub to the jsdom window (jsdom does not implement it). */
-function installWindowMatchMedia(systemDark: boolean): void {
-  const win = document.defaultView;
-  if (!win) {
-    throw new Error("jsdom window is unavailable");
-  }
-  Object.defineProperty(win, "matchMedia", {
-    configurable: true,
-    value: () => createMatchMediaStub(DARK_SCHEME_QUERY, systemDark),
-  });
-}
 
 /**
  * Extracts the pre-paint script from the SOURCE index.html.
@@ -158,7 +83,7 @@ function resetDocument(): void {
 
 beforeEach(() => {
   resetDocument();
-  installWindowLocalStorage(createLocalStorageStub());
+  installThemeStorage(null);
 });
 
 afterEach(() => {
@@ -170,22 +95,20 @@ describe("pre-paint script harness", () => {
     const probe = document.createElement("script");
     probe.textContent = 'document.documentElement.setAttribute("data-probe", "ran")';
     document.head.appendChild(probe);
+
     expect(document.documentElement.getAttribute("data-probe")).toBe("ran");
+
     document.documentElement.removeAttribute("data-probe");
   });
 });
 
 describe("pre-paint script (behavior)", () => {
   it.each(scenarios)("applies $label per contract", (scenario) => {
-    installWindowMatchMedia(scenario.systemDark);
+    installThemeMediaQueryStub(scenario.systemDark);
     if (scenario.storageThrows) {
-      installWindowLocalStorage({
-        getItem(): never {
-          throw new Error("Storage access denied");
-        },
-      });
+      installThemeStorage(null, { throwOnGet: true });
     } else if (scenario.stored !== undefined && scenario.stored !== null) {
-      window.localStorage.setItem(THEME_STORAGE_KEY, scenario.stored);
+      installThemeStorage(scenario.stored);
     }
 
     runPrePaintScript();
@@ -203,15 +126,19 @@ describe("pre-paint script (integration with real index.html)", () => {
   });
 
   it('adds nothing but class="dark" when the system prefers dark and nothing is stored', () => {
-    installWindowMatchMedia(true);
+    installThemeMediaQueryStub(true);
+
     runPrePaintScript();
+
     expect(document.documentElement.getAttribute("class")).toBe("dark");
     expect(document.body.hasAttribute("class")).toBe(false);
   });
 
   it("touches nothing when the resolved theme is light", () => {
-    installWindowMatchMedia(false);
+    installThemeMediaQueryStub(false);
+
     runPrePaintScript();
+
     expect(document.documentElement.hasAttribute("class")).toBe(false);
     expect(document.body.hasAttribute("class")).toBe(false);
   });
