@@ -68,3 +68,36 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Structure every test with the AAA pattern: separate the Arrange, Act, and Assert phases with blank lines (no section comments)
 - Reuse the shared test toolkit in `src/testing/` (`setupThemeTestBed`, `createFixture`, `query`, the storage/matchMedia stubs) instead of repeating TestBed and stub setup in every spec
 - Do NOT reset `document.documentElement` classes in `beforeEach`: each fresh `setupThemeTestBed` re-instantiates the store, which re-applies the correct root marker on init
+
+### Reliable tests (applies to all test types: unit, component, e2e)
+
+A test is **reliable** only when it survives the **mutant check**: run the test and verify it passes, break the
+code under test (delete/alter part of its logic), verify the test FAILS, then restore the code and verify it
+passes again. A mutant is a deliberate mutation of the implementation (removing or replacing code) that a
+well-written test must catch. If the test stays green with the mutant in place, the test is unreliable and must
+be strengthened.
+
+### E2E flows (Playwright)
+
+- Every e2e run targets a **user flow** that is defined as a separate, implementation-agnostic description
+  (the `*.flow.ts` files, or a `FLOWS.md`): the flow declares the steps a real user performs (given
+  a state, when a user acts, then the observable outcome).
+- Group each test set in its own feature folder under `e2e/<feature>/` (`theme.steps.ts` catalog,
+  `theme.flow.ts`, `theme.spec.ts`), keeping the shared support helpers in `e2e/support/`.
+- The Playwright specs translate each declared flow literally into steps (`.goto`, `.click`, `.expect`), never
+  inventing steps that are not in the flow definition. One spec per flow; flow names match spec names.
+- Flows must be runnable with the same mutant check: deleting the step that produces the asserted outcome must
+  fail the corresponding spec.
+
+### E2E translator layer
+
+- Keep the flow language decoupled from the browser actions: `e2e/support/` holds the generic contract
+  (`flow.ts`), the `StepTranslator`/`TranslatorRegistry`/`runFlow`/`registerFlows` helpers (`registry.ts`, an
+  exhaustive `Record<S, translator>` keyed by catalog statement), and the reusable browser actions
+  (`shared.ts`: `openApp`, `reloadPage`, `emulateColorScheme`, `injectAxe`,
+  `expectNoSeriousOrCriticalViolations`, ...).
+- Keep every interchangeable action in `e2e/support/shared.ts` so setup, config, and stubs are reused across
+  specs instead of duplicated. Keep feature-specific actions (selectors, localStorage keys, root classes) in
+  the spec that owns them.
+- A spec builds a `TranslatorRegistry` for its own step catalog, composing shared actions; the `Record` type
+  forces a translator for every statement in the catalog.
