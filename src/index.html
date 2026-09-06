@@ -1,6 +1,28 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <script>
+    (() => {
+      try {
+        const stored = localStorage.getItem("lockr.theme");
+        if (stored === "dark") {
+          document.documentElement.classList.add("dark");
+        } else if (stored === "light") {
+          document.documentElement.classList.remove("dark");
+        } else {
+          document.documentElement.classList.toggle(
+            "dark",
+            window.matchMedia("(prefers-color-scheme: dark)").matches,
+          );
+        }
+      } catch {
+        document.documentElement.classList.toggle(
+          "dark",
+          window.matchMedia("(prefers-color-scheme: dark)").matches,
+        );
+      }
+    })();
+  </script>
   <meta charset="utf-8">
   <title>Nop3LockrVault</title>
   <base href="/">

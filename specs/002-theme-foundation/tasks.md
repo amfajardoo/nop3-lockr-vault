@@ -62,25 +62,32 @@ inside jsdom and asserts the applied root class for every spec scenario.
 
 ### Tests for User Story 1 (written first - MUST FAIL before T006)
 
-- [ ] T004 [P] [US1] Write `src/theme/pre-paint.spec.ts`: load `src/index.html` from disk (`fs`),
+- [x] T004 [P] [US1] Write `src/theme/pre-paint.spec.ts`: load `src/index.html` from disk (`fs`),
       extract the inline `<head>` script, execute it in a `jsdom` instance (seed `localStorage`,
       stub `window.matchMedia`) and assert the root `dark` class for each spec scenario:
       (a) stored `"dark"` + system light → dark; (b) stored `"light"` + system dark → light;
       (c) missing value + system dark → dark; (d) stored `"system"` → follows system;
       (e) invalid/malformed stored value → follows system, no exception; (f) `localStorage.getItem`
       throwing → follows system, no crash. EXPECT FAIL: script does not exist yet.
-- [ ] T005 [P] [US1] Write `src/theme/index-html.spec.ts` (structural): assert `src/index.html`
+      (2026-09-05: RED verified; runs the real script inside the builder's jsdom, per Angular pattern.)
+- [x] T005 [P] [US1] Write `src/theme/index-html.spec.ts` (structural): assert `src/index.html`
       `<head>` contains exactly one inline pre-paint `<script>` as its FIRST child, synchronous
       (no `defer`/`async`/`type="module"`), referencing the `lockr.theme` key and
       `prefers-color-scheme`, with no dependency on any external module/request. EXPECT FAIL.
+      (2026-09-05: RED verified.)
 
 ### Implementation for User Story 1
 
-- [ ] T006 [US1] Implement the minimal inline pre-paint script in `src/index.html` `<head>` (before
+- [x] T006 [US1] Implement the minimal inline pre-paint script in `src/index.html` `<head>` (before
       the stylesheet/Angular bundle) per research D3: `try/catch`-read `localStorage["lockr.theme"]`;
       `"light"` → remove class, `"dark"` → add class, anything else (including `"system"`, missing,
       malformed, thrown) → `matchMedia("(prefers-color-scheme: dark)")` decides; mutate only
       `classList` on `document.documentElement`. No other code, no layout-affecting statements.
+      (2026-09-06: GREEN verified via `pnpm verify` — Biome no-issues, 61 unit tests pass, build emits
+      `dist/nop3-lockr-vault`. Stubs (`localStorage`/`matchMedia`) are installed on the jsdom WINDOW via
+      `Object.defineProperty`; the real script source runs with `window.eval` because jsdom's own
+      internal vm context does not see window-bound globals (11 unhandled `window.matchMedia is not a
+      function` errors exposed it).)
 
 **Checkpoint**: T004+T005 (and the app's existing specs) pass; US1 is functionally proven at boot.
 
@@ -96,7 +103,7 @@ and recomputes every AA invariant from the parsed token values.
 
 ### Tests for User Story 2 (written first - MUST FAIL before T008)
 
-- [ ] T007 [P] [US2] Write `src/theme/tokens.spec.ts`: parse `src/styles.css` and assert
+- [x] T007 [P] [US2] Write `src/theme/tokens.spec.ts`: parse `src/styles.css` and assert
       (a) `@custom-variant dark (&:where(.dark, .dark *))` appears immediately after
       `@import "tailwindcss";`; (b) `:root` defines ALL light tokens and `.dark` overrides the SAME
       token set from data-model.md (`--surface`, `--surface-raised`, `--foreground`, `--muted`,
@@ -105,13 +112,18 @@ and recomputes every AA invariant from the parsed token values.
       `color-scheme: light`/`dark` respectively; (e) recompute `contrastRatio` (from T002) for every
       invariant pair in data-model.md in BOTH palettes and assert text ≥ 4.5:1 and non-text (`--line`,
       focus/accent) ≥ 3:1. EXPECT FAIL: styles.css has no tokens yet.
+      (2026-09-06: RED verified — 52 failures before T008; GREEN once the token CSS landed.)
 
 ### Implementation for User Story 2
 
-- [ ] T008 [US2] Implement the theming core in `src/styles.css`: `@custom-variant dark` after the
+- [x] T008 [US2] Implement the theming core in `src/styles.css`: `@custom-variant dark` after the
       Tailwind import; `:root`/`.dark` token blocks per data-model.md (including `color-scheme`);
       `@theme inline` mapping all tokens to utilities; a global `@layer base` so the document canvas
       uses the tokens (`body { background-color/color }` via the raw variables).
+      (2026-09-06: GREEN via `pnpm verify` — Biome no-issues, 115 unit tests pass, build emits the
+      token utilities in `styles-*.css`. Required `biome.json` change: CSS parser
+      `tailwindDirectives: true` so the gate understands Tailwind v4 `@custom-variant`/`@theme`
+      syntax.)
 
 **Checkpoint**: T007 passes; both palettes are AA-enforced at the token layer.
 
@@ -127,18 +139,23 @@ uses only token utilities; manual visual check stays consistent in both themes.
 
 ### Tests for User Story 3 (written first - MUST FAIL before T010)
 
-- [ ] T009 [P] [US3] Write `src/app/app-tokens.spec.ts` (structural): read `src/app/app.html`,
+- [x] T009 [P] [US3] Write `src/app/app-tokens.spec.ts` (structural): read `src/app/app.html`,
       `src/app/app.css` and assert no literal hex/oklch/rgb() color values remain and that themed
       color classes used are token utilities (`bg-surface*`, `text-foreground`, `text-muted`,
       `border-line*`, `text-accent`); existing layout classes are preserved. EXPECT FAIL: the
       scaffold still inlines hardcoded oklch palette + rainbow gradients.
+      (2026-09-06: RED verified — literal `oklch(`/`color-mix(` found and palette utilities missing.)
 
 ### Implementation for User Story 3
 
-- [ ] T010 [US3] Migrate `src/app/app.html` + `src/app/app.css` to token-based styling: remove the
+- [x] T010 [US3] Migrate `src/app/app.html` + `src/app/app.css` to token-based styling: remove the
       hardcoded oklch variables/gradients (Angular scaffold branding is not ours - research D6),
       replace themed colors with token utilities, keep layout/spacing intact, and keep the existing
       `app.spec.ts` title assertions passing.
+      (2026-09-06: GREEN via `pnpm verify` — 120 unit tests pass, Biome clean, build OK. The scaffold
+      logo/branding was removed entirely (D6); shell uses only token utilities
+      `bg-surface`, `bg-surface-raised`, `text-foreground`, `text-muted`, `text-accent`,
+      `text-on-accent`, `border-line`; `h1` sizing kept in `app.css`, which holds no color literals.)
 
 **Checkpoint**: T009 passes; the scaffold is fully token-driven in both themes.
 
@@ -148,12 +165,18 @@ uses only token utilities; manual visual check stays consistent in both themes.
 
 **Purpose**: End-to-end verification and repo hygiene.
 
-- [ ] T011 Run `pnpm verify` (Biome gate + unit tests + build) and fix any violations; confirm no
+- [x] T011 Run `pnpm verify` (Biome gate + unit tests + build) and fix any violations; confirm no
       literal `#`/`oklch(` colors remain anywhere under `src/` outside `src/styles.css` token blocks
       (grep check) and `pnpm lint` passes.
-- [ ] T012 [P] Confirm the shipped build keeps the pre-paint script: `pnpm build`, then assert the
+      (2026-09-06: `pnpm verify` GREEN — Biome clean, 120 unit tests, build OK; `pnpm lint` passes.
+      Grep for `#hex|oklch(|color-mix(` under `src/` matches ONLY `src/styles.css` token blocks and
+      the contrast utility's test fixtures (mathematical input data, not UI colors).)
+- [x] T012 [P] Confirm the shipped build keeps the pre-paint script: `pnpm build`, then assert the
       inline script is present in `dist/` `index.html` in `<head>`. Optionally re-run the
       quickstart.md manual checks (no-FOUC via devtools emulation; one-marker switch; offline reload).
+      (2026-09-06: `dist/nop3-lockr-vault/browser/index.html` keeps the synchronous inline pre-paint
+      script as the FIRST child of `<head>`, before the stylesheet and the Angular bundle. Manual
+      quickstart checks remain optional/005-owned.)
 
 ---
 
