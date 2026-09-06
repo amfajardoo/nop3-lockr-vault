@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lockr-vault.dev/specs/003-theme-state/contracts/theme-state.schema.json",
+  "title": "ThemeState",
+  "description": "The shape of the theme signalStore state exposed by feature 003. 'choice' is the stored preference (or 'system' when absent/invalid); 'effective' is the resolved palette that must match the document-root marker. 'choice' is persisted under the 'lockr.theme' key per the 002 contract (theme-choice.schema.json); 'effective' is derived and never persisted.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["choice", "effective"],
+  "properties": {
+    "choice": {
+      "type": "string",
+      "enum": ["light", "dark", "system"],
+      "description": "The current theme choice. 'system' means the effective theme is whatever the OS preference resolves to, live."
+    },
+    "effective": {
+      "type": "string",
+      "enum": ["light", "dark"],
+      "description": "The resolved palette. When 'choice' is 'system', this follows the live prefers-color-scheme match; otherwise it equals the explicit choice."
+    }
+  }
+}
