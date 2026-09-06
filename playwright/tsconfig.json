@@ -1,0 +1,7 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "types": ["node", "vite/client"]
+  },
+  "include": ["./gallery/**/*.ts", "../playwright-ct.config.ts", "../vite.ct.config.ts"]
+}
