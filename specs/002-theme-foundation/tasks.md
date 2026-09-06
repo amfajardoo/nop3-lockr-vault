@@ -31,8 +31,9 @@ FAIL before the implementation that satisfies them.
 
 **Purpose**: Confirm the starting point is green before any change.
 
-- [ ] T001 Confirm the green baseline by running `pnpm verify` and recording the output (all
+- [x] T001 Confirm the green baseline by running `pnpm verify` and recording the output (all
       gates: `biome ci . && pnpm test && pnpm build`). If green, proceed; if not, STOP and report.
+      (2026-09-05: green after LF gate fix; `theme-choice.schema.json` formatted for trailing newline.)
 
 ---
 
@@ -40,10 +41,10 @@ FAIL before the implementation that satisfies them.
 
 **Purpose**: Pure color-math utilities every story's contrast guarantees depend on (research D4).
 
-- [ ] T002 Create `src/theme/contrast.ts` with pure WCAG functions `relativeLuminance(hex: string): number`
+- [x] T002 Create `src/theme/contrast.ts` with pure WCAG functions `relativeLuminance(hex: string): number`
       and `contrastRatio(hexA: string, hexB: string): number` (strict TS, `unknown`-safe inputs, supports
       `#rgb` and `#rrggbb`; per research D4 no external dependency).
-- [ ] T003 Create `src/theme/contrast.spec.ts` unit-testing `relativeLuminance` and `contrastRatio`
+- [x] T003 Create `src/theme/contrast.spec.ts` unit-testing `relativeLuminance` and `contrastRatio`
       against known ratios (white/black = 21:1; `#0f172a` on `#ffffff` ≈ 18.9:1; `#475569` on
       `#ffffff` ≈ 5.9:1; white on `#2563eb` ≈ 5.1:1; dark-mode pairs from data-model.md).
 
