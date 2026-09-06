@@ -3,6 +3,7 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 ## Process Policies
 
 - **Node command execution**: The agent runs node-based commands, but if a command fails or produces an unexpected result, STOP and hand the exact command to the user to execute and report back the output. Never silently retry or work around environment issues.
+- **Review before commit**: The agent MUST NOT commit until the user has reviewed the pending changes (in the editor/IDE) and explicitly approved. Before every commit, present a concise summary of what it will contain and wait for approval. This applies to all commits, including documentation/spec artifacts.
 - **Branching**: Never mix tooling/setup changes with feature code. Keep process/environment setup in its own commits (ideally its own branch) separate from feature implementation.
 
 ## TypeScript Best Practices
