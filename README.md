@@ -7,10 +7,27 @@ This project was generated using [Angular CLI](https://github.com/angular/angula
 To start a local development server, run:
 
 ```bash
-ng serve
+pnpm start
 ```
 
 Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+
+## Toolchain
+
+The repository uses [Biome](https://biomejs.dev) (pinned to `2.5.12`) for linting, formatting,
+and import organization. All commands are run through the project package manager:
+
+| Command | Description |
+|---|---|
+| `pnpm format` | Rewrites files in place to the canonical style |
+| `pnpm lint` | Static analysis; reports `file:line` + rule without writing |
+| `pnpm lint:fix` | Applies safe lint fixes in place |
+| `pnpm check` | Lint + format + import checks (read-only) |
+| `pnpm check:fix` | Applies safe fixes from `check` in place |
+| `pnpm check:format` | Formatting-only gate (`biome ci`) |
+| `pnpm verify` | Full gate: format+lint, unit tests, and production build |
+
+`pnpm verify` must pass before a pull request is opened. It runs fully offline.
 
 ## Code scaffolding
 
@@ -31,7 +48,7 @@ ng generate --help
 To build the project run:
 
 ```bash
-ng build
+pnpm build
 ```
 
 This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
@@ -41,18 +58,13 @@ This will compile your project and store the build artifacts in the `dist/` dire
 To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
 
 ```bash
-ng test
+pnpm test
 ```
 
 ## Running end-to-end tests
 
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+End-to-end testing is not configured yet; the `ng e2e` command is covered by the upcoming
+theme/shell features. You can choose a framework that suits your needs when that is added.
 
 ## Additional Resources
 
