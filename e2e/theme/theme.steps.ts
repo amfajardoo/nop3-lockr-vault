@@ -14,6 +14,17 @@ export const themeSteps = {
   shellRendered: "the app is open at the root with the shell and theme switcher rendered",
   axeRuns: "an AXE scan runs on the visible page",
   noViolations: "no serious or critical violations are reported",
+  focusSystem: "the user moves keyboard focus to the System option",
+  pressLeft: "the user presses the ArrowLeft key",
+  darkCheckedAndFocused: "the Dark option is the checked radio and keeps keyboard focus",
+  pressHome: "the user presses the Home key",
+  lightCheckedAndFocused: "the Light option is the checked radio and keeps keyboard focus",
+  pressEnd: "the user presses the End key",
+  systemCheckedAndFocused: "the System option is the checked radio and keeps keyboard focus",
+  storedDarkChoice: "the app was left with a stored dark choice in a previous session",
+  selectSystem: "the user selects the System option in the switcher",
+  systemStored: "localStorage lockr.theme equals 'system'",
+  systemChecked: "the System option is the checked radio in the switcher",
 } as const;
 
 export type ThemeStep = (typeof themeSteps)[keyof typeof themeSteps];

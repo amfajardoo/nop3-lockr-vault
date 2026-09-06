@@ -35,4 +35,32 @@ export const themeToggleFlows = {
       then(themeSteps.noViolations),
     ],
   },
+  adjustWithKeyboard: {
+    id: "theme-toggle-adjust-with-keyboard",
+    title: "The user adjusts the theme with the keyboard",
+    steps: [
+      given(themeSteps.appOpen),
+      when(themeSteps.focusSystem),
+      when(themeSteps.pressLeft),
+      then(themeSteps.darkCheckedAndFocused),
+      when(themeSteps.pressHome),
+      then(themeSteps.lightCheckedAndFocused),
+      when(themeSteps.pressEnd),
+      then(themeSteps.systemCheckedAndFocused),
+    ],
+  },
+  explicitSystemFollowsOs: {
+    id: "theme-toggle-explicit-system-follows-os",
+    title: "An explicit System choice overrides a stored dark choice and follows the OS",
+    steps: [
+      given(themeSteps.storedDarkChoice),
+      when(themeSteps.selectSystem),
+      then(themeSteps.systemChecked),
+      then(themeSteps.systemStored),
+      when(themeSteps.osDark),
+      then(themeSteps.systemDark),
+      when(themeSteps.osLight),
+      then(themeSteps.systemLight),
+    ],
+  },
 } satisfies Record<string, UserFlow>;

@@ -86,6 +86,34 @@ test.describe("ThemeToggle component (Playwright gallery)", () => {
     await expect(component.locator(`input[data-theme-option="${LIGHT}"]`)).toBeFocused();
   });
 
+  test("jumps to first and last option with Home and End keys", async ({ mount, page }) => {
+    const component = await mount("app/theme-toggle/theme-toggle/Primary");
+
+    await component.locator("label", { hasText: "Dark" }).locator("input").check();
+    await component.locator(`input[data-theme-option="${DARK}"]`).focus();
+
+    await page.keyboard.press("Home");
+
+    await expect(component.locator("input:checked")).toHaveAttribute("data-theme-option", LIGHT);
+    await expect(component.locator(`input[data-theme-option="${LIGHT}"]`)).toBeFocused();
+
+    await page.keyboard.press("End");
+
+    await expect(component.locator("input:checked")).toHaveAttribute("data-theme-option", SYSTEM);
+    await expect(component.locator(`input[data-theme-option="${SYSTEM}"]`)).toBeFocused();
+  });
+
+  test("falls back to System when a malformed stored value is ignored", async ({ mount, page }) => {
+    await page.evaluate((key) => localStorage.setItem(key, "pink"), THEME_STORAGE_KEY);
+
+    const component = await mount("app/theme-toggle/theme-toggle/Primary");
+
+    await expect(component.locator("input:checked")).toHaveAttribute("data-theme-option", SYSTEM);
+    await expect
+      .poll(() => page.evaluate(() => document.documentElement.classList.contains("dark")))
+      .toBe(false);
+  });
+
   test("Dark story renders the persisted dark presentation", async ({ mount, page }) => {
     const component = await mount("app/theme-toggle/theme-toggle/Dark");
 
