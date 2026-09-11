@@ -33,8 +33,11 @@ shown to FAIL before the implementation that satisfies them.
 
 **Purpose**: Confirm the starting point is green before any change.
 
-- [ ] T001 Confirm the green baseline by running `pnpm verify` and recording the output (all
+- [x] T001 Confirm the green baseline by running `pnpm verify` and recording the output (all
       gates: `biome ci . && pnpm test && pnpm build`). If green, proceed; if not, STOP and report.
+      (2026-09-11: baseline GREEN — 55 files Biome, 150 tests in 9 files, build OK. Note: the
+      `verify` script kept `ng test` in watch mode; fixed via `chore/fix-verify-watch` by adding
+      `test:run` (`ng test --watch=false`) and routing `verify` through it.)
 
 ---
 
@@ -49,7 +52,7 @@ on the shell reports no serious/critical violations.
 
 ### Tests for User Story 1 (written first — MUST FAIL before T003)
 
-- [ ] T002 [P] [US1] Write `src/app/dashboard/dashboard.spec.ts` — render `Dashboard` with
+- [x] T002 [P] [US1] Write `src/app/dashboard/dashboard.spec.ts` — render `Dashboard` with
       `provideRouter([])` and `ThemeStore` (stubs on `document.defaultView`): (a) the header
       renders `Lockr Vault` brand and the `<theme-toggle>` radiogroup; (b) the header, nav, and
       main are present with correct landmark roles; (c) a skip link is the first focusable and
@@ -57,16 +60,22 @@ on the shell reports no serious/critical violations.
       scan on the full dashboard reports no serious/critical violations.
       **EXPECT FAIL**: `dashboard.ts` does not exist yet (module error); once created, the
       old `App` still owns chrome and the assertions fail against the component under test.
+      (2026-09-11: RED verified — `TS2307: Cannot find module './dashboard'`.)
+      (2026-09-11: GREEN — extended to cover US2/US3 assertions in one spec file; 8 tests.)
 
-- [ ] T003 [US1] Update `src/app/app.spec.ts` to reflect the new thin-bootstrap expectation:
+- [x] T003 [US1] Update `src/app/app.spec.ts` to reflect the new thin-bootstrap expectation:
       render `App` with `provideRouter(routes)` (imported from `app.routes.ts`) and assert: (a)
       the root renders only a `<router-outlet>` (no `<header>`, no brand, no toggle); (b) the
       `App` element is minimal (check for absence of chrome). **EXPECT FAIL until routes are
       wired**.
+      (2026-09-11: RED verified — `TS2769`/`TS2339` on `axe.run` with nullable
+      `routeNativeElement` (fixed with a non-null assertion + cast), and the module error
+      `./dashboard`; the router harness import lives in `@angular/router/testing` for v22.)
+      (2026-09-11: GREEN — 4 tests passing, incl. lazy-load + wildcard redirect.)
 
 ### Implementation for User Story 1
 
-- [ ] T004 [US1] Implement routing and thin bootstrap:
+- [x] T004 [US1] Implement routing and thin bootstrap:
       - Rewrite `src/app/app.routes.ts`: `routes = [ { path: "", loadComponent: () => import("./dashboard/dashboard").then(m => m.Dashboard) }, { path: "**", redirectTo: "" } ]`.
       - Rewrite `src/app/app.html`: reduce to `<router-outlet />` only.
       - `src/app/app.ts`: remove `ThemeToggle` import, remove `title` signal (unused once chrome
@@ -75,6 +84,10 @@ on the shell reports no serious/critical violations.
       - **Note on `app-tokens.spec.ts` (002)**: this spec asserts `text-muted` in the old
         `app.html` `<main>`. With the chrome moved to Dashboard, this assertion will fail. T006
         will reconcile it; do NOT modify the 002 spec in T004.
+      (2026-09-11: routes written (`''` lazy `loadComponent` → Dashboard, `'**'` → `''`); `App`
+      reduced to `<router-outlet />`, imports `[RouterOutlet]` only; Dashboard component created
+      with header, nav, main. T009 reconciled `app-tokens.spec.ts` in the same change set.)
+      (2026-09-11: GREEN — T002/T003 passing; Dashboard renders on `''` via harness.)
 
 **Checkpoint**: T002 + T003 both GREEN; `App` is a thin bootstrap; dashboard renders on `''`.
 
@@ -91,16 +104,18 @@ and an AXE scan on the nav reports no serious/critical violations.
 
 ### Tests for User Story 2 (written first — MUST FAIL before T006)
 
-- [ ] T005 [P] [US2] Expand `src/app/dashboard/dashboard.spec.ts` with nav assertions: (a)
+- [x] T005 [P] [US2] Expand `src/app/dashboard/dashboard.spec.ts` with nav assertions: (a)
       the `<nav>` has `aria-label="Main"` and renders one link; (b) the link text is
       `Overview`; (c) the link is focusable and shows a visible ring on `:focus-visible`; (d)
       the active item (current route `''`) carries `aria-current="page"`; (e) an AXE scan
       scoped to the nav reports no serious/critical violations.
       **EXPECT FAIL**: no `<nav>` renders in the dashboard yet.
+      (2026-09-11: GREEN — written with the real `routes`; active nav uses Angular's native
+      `ariaCurrentWhenActive` input on `RouterLinkActive`.)
 
 ### Implementation for User Story 2
 
-- [ ] T006 [US2] Implement nav in `src/app/dashboard/dashboard.html`: add `<nav aria-label="Main">`
+- [x] T006 [US2] Implement nav in `src/app/dashboard/dashboard.html`: add `<nav aria-label="Main">`
       with `@for (item of items; track item.route)` rendering `<a [routerLink]="item.route"
       routerLinkActive="active" [attr.aria-current]="isActive(item.route) ? 'page' : null">`.
       Implement `isActive` helper in `dashboard.ts` (inject `ActivatedRoute` or use `Router`).
@@ -108,6 +123,10 @@ and an AXE scan on the nav reports no serious/critical violations.
       and `NavItem` interface.
       Add nav styles in `src/app/dashboard.css` (token-based focus-visible rings, active state).
       Run `pnpm test` and confirm T005 turns GREEN.
+      (2026-09-11: GREEN — nav renders via template ref `#link="routerLinkActive"` +
+      `ariaCurrentWhenActive="page"`; `NAV_ITEMS` uses route `"/"` so the root path matches
+      `isActive`; barring `routerLinkActive` as a bare attribute is required for the exportAs
+      template ref to resolve.)
 
 **Checkpoint**: T005 GREEN; nav renders one item, active state works, AXE clean.
 
@@ -124,19 +143,24 @@ outlet.
 
 ### Tests for User Story 3 (written first — MUST FAIL before T008)
 
-- [ ] T007 [P] [US3] Add to `src/app/dashboard/dashboard.spec.ts`: (a) the main area contains an
+- [x] T007 [P] [US3] Add to `src/app/dashboard/dashboard.spec.ts`: (a) the main area contains an
       `<h1>` heading; (b) the empty-state hint paragraph renders; (c) register a stub child route
       via `provideRouter([{ path: "", component: StubChild }])` nested under the dashboard's
       outlet and assert its text appears in the rendered output.
       **EXPECT FAIL**: main area currently has no heading or outlet (T006 nav pass didn't add
       them).
+      (2026-09-11: GREEN — stub child route uses `{ path: "", component: Dashboard, children: [...]
+      }` with `RouterTestingHarness` navigation; avoids duplicate `provideRouter` conflicts by
+      configuring each `it` independently.)
 
 ### Implementation for User Story 3
 
-- [ ] T008 [US3] Implement workspace in `src/app/dashboard/dashboard.html`: add `<main
+- [x] T008 [US3] Implement workspace in `src/app/dashboard/dashboard.html`: add `<main
       id="main-content">` with `<h1 class="text-lg font-semibold">Dashboard</h1>`, `<p
       class="text-muted">Your credentials will appear here.</p>`, and a nested
       `<router-outlet />`. Run `pnpm test` and confirm T007 turns GREEN.
+      (2026-09-11: GREEN — `<main id="main-content">` + `<h1>` + empty-state paragraph + nested
+      `<router-outlet>` present.)
 
 **Checkpoint**: T007 GREEN; main area renders heading + hint; child route outlet works.
 
@@ -149,12 +173,14 @@ outlet.
 assertion must be reconciled — either moved to the dashboard template or removed if the 002
 assertion was incidental and not contractually binding.
 
-- [ ] T009 Reconcile `src/app/app-tokens.spec.ts` (002 artifact): confirm what it asserts and
+- [x] T009 Reconcile `src/app/app-tokens.spec.ts` (002 artifact): confirm what it asserts and
       decide (a) if the assertion targets a template class literal that should live in the
       Dashboard instead, update the test to query the Dashboard's `text-muted` element; or (b)
       if the assertion was only checking the root's own styling utilities, update the selector to
       target the dashboard main area. Run `pnpm test` and ensure the 002 test still passes
       without modifying `src/styles.css` or `src/theme/**`.
+      (2026-09-11: GREEN — spec updated to query `Dashboard` template/style files; 6 tests pass.
+      `src/styles.css` and `src/theme/**` untouched.)
 
 ---
 
@@ -162,18 +188,27 @@ assertion was incidental and not contractually binding.
 
 **Purpose**: Confirm the re-chromed app still passes the 005 theme flows and the full gate.
 
-- [ ] T010 Run `pnpm e2e` (005 theme flows) against the running app (`ng serve` or `webServer`
+- [x] T010 Run `pnpm e2e` (005 theme flows) against the running app (`ng serve` or `webServer`
       in `playwright.config.ts`). If any selector broke because chrome moved into the lazy
       Dashboard, update the selectors in `e2e/support/shared.ts` or `e2e/theme/theme.spec.ts`
       (adjust only selectors; do not remove or weaken any assertion — mutant check applies).
       The flow step order (`emulateColorScheme`, `goto`, `click` toggle) must remain unchanged.
+      (2026-09-11: GREEN — 15 tests across chromium/firefox/webkit; the chrome move into the
+      lazy Dashboard did not break the 005 flows; no selector changes needed.)
 
-- [ ] T011 Run `pnpm verify` (Biome gate + full unit suite + `ng build`) and fix any violations;
+- [x] T011 Run `pnpm verify` (Biome gate + full unit suite + `ng build`) and fix any violations;
       run the color-literal grep on `src/app/**` and confirm no `oklch(`/`color-mix(`/hex
       literals; confirm `src/index.html`/`src/theme/**` unchanged (git diff empty on those
       paths); confirm `dist/nop3-lockr-vault/browser/index.html` still has the 002 pre-paint
       script as the first child of `<head>`; confirm the build emits a lazy chunk for the
       dashboard; `pnpm lint` passes.
+      (2026-09-11: GREEN — `pnpm verify` passes: Biome 60 files clean, 160 unit tests, build
+      OK with lazy `dashboard` chunk `chunk-7GJWZMIB.js`. Grep found no color literals in
+      `src/app/**`. `src/index.html` + `src/theme/**` git-diff empty. Pre-paint script is the
+      first child of `<head>` in the built `index.html`. Note: `useValidAnchor` (biome HTML
+      a11y) flags `routerLink` anchors lacking a static `href`; resolved with a static
+      `href="/"` on the brand link and a `biome-ignore` for the data-driven nav link, since
+      Angular `RouterLink` overwrites `href` at runtime.)
 
 ---
 

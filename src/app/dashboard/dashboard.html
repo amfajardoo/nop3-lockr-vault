@@ -1,0 +1,34 @@
+<div class="flex min-h-screen flex-col bg-surface text-foreground">
+  <header class="sticky top-0 z-10 border border-line bg-surface">
+    <a class="skip-link sr-only focus:not-sr-only" href="#main-content">Skip to content</a>
+    <div class="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-6 py-4">
+      <a class="brand text-accent" routerLink="/" href="/">{{ title }}</a>
+      <theme-toggle />
+    </div>
+  </header>
+  <nav aria-label="Main" class="mx-auto w-full max-w-5xl px-6">
+    <ul class="flex flex-wrap items-center gap-2">
+      @for (item of navItems; track item.route) {
+<li>
+            <!-- biome-ignore lint/a11y/useValidAnchor: RouterLink binds the real href at runtime -->
+            <a
+              #link="routerLinkActive"
+              routerLinkActive
+              class="inline-block rounded px-3 py-2 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent hover:text-foreground"
+              [class.text-muted]="!link.isActive"
+              [class.text-accent]="link.isActive"
+              [routerLink]="item.route"
+              [href]="item.route"
+              ariaCurrentWhenActive="page"
+              >{{ item.label }}</a
+            >
+          </li>
+      }
+    </ul>
+  </nav>
+  <main id="main-content" class="mx-auto w-full max-w-5xl flex-1 px-6 py-8 text-muted">
+    <h1 class="font-semibold text-foreground">Dashboard</h1>
+    <p class="mt-2">Your credentials will appear here.</p>
+    <router-outlet class="mt-8 block" />
+  </main>
+</div>

@@ -1,12 +1,1 @@
-<div class="flex min-h-screen flex-col bg-surface text-foreground">
-  <header class="sticky top-0 z-10 border border-line bg-surface">
-    <a class="skip-link sr-only focus:not-sr-only" href="#main-content">Skip to content</a>
-    <div class="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-6 py-4">
-      <a class="brand text-accent" href="/" routerLink="/">{{ title() }}</a>
-      <theme-toggle />
-    </div>
-  </header>
-  <main id="main-content" class="mx-auto w-full max-w-5xl flex-1 px-6 py-8 text-muted">
-    <router-outlet />
-  </main>
-</div>
+<router-outlet />
