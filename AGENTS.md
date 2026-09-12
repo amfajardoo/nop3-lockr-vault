@@ -5,6 +5,7 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - **Node command execution**: The agent runs node-based commands, but if a command fails or produces an unexpected result, STOP and hand the exact command to the user to execute and report back the output. Never silently retry or work around environment issues.
 - **Review before commit**: The agent MUST NOT commit until the user has reviewed the pending changes (in the editor/IDE) and explicitly approved. Before every commit, present a concise summary of what it will contain and wait for approval. This applies to all commits, including documentation/spec artifacts.
 - **Branching**: Never mix tooling/setup changes with feature code. Keep process/environment setup in its own commits (ideally its own branch) separate from feature implementation.
+- **Follow the flow without asking**: When working within the speckit SDD flow (/speckit.specify → plan → tasks → analyze → implement → converge), move to the next step automatically once the current one finishes. Do NOT ask "should I continue?" or offer step-skipping choices at each gate. Only stop for the user when: (1) a commit is pending (Review before commit above), (2) a command fails or produces an unexpected result, (3) a genuinely ambiguous decision with real alternatives arises, or (4) the user explicitly interrupts. Everything else proceeds by default.
 
 ## TypeScript Best Practices
 
@@ -76,6 +77,22 @@ code under test (delete/alter part of its logic), verify the test FAILS, then re
 passes again. A mutant is a deliberate mutation of the implementation (removing or replacing code) that a
 well-written test must catch. If the test stays green with the mutant in place, the test is unreliable and must
 be strengthened.
+
+### Harness-first tests: tests as a human use of the app
+
+- Every test should read as a **faithful human representation** of how a user actually uses the app (given a
+  state, when a user acts, then an observable outcome) — never as a call sequence into implementation
+  internals.
+- Prefer driving those interactions through a **harness** (the CDK Test Harness pattern:
+  `ComponentHarness` with typed `locatorFor` queries) instead of raw DOM queries or reaching into component
+  state. In most cases a harness is the expected way to model user actions in component/CT tests.
+- If a component needs a **custom harness**, add `@angular/cdk/testing` to install the harness base classes and
+  build the harness from them. Treat that install as a tooling change (own commit, per the Branching policy).
+- Otherwise, component tests should limit themselves to the shared test toolkit in `src/testing/`
+  (`setupThemeTestBed`, `createFixture`, `query`) plus harness locators — no ad-hoc `fixture.nativeElement`
+  spelunking when a harness path exists.
+- Harness-based specs still must pass the same **mutant check**: deleting/altering the code the harness
+  interacts with must fail the spec.
 
 ### E2E flows (Playwright)
 
