@@ -8,6 +8,8 @@ import {
   withState,
 } from "@ngrx/signals";
 
+import { safeParse } from "../validation/validation";
+import { type ThemeChoice, themeChoiceSchema } from "./theme-choice-schema";
 import {
   CHOICE_DARK,
   CHOICE_LIGHT,
@@ -17,23 +19,16 @@ import {
   THEME_STORAGE_KEY,
 } from "./theme-contract";
 
-type ThemeChoice = typeof CHOICE_LIGHT | typeof CHOICE_DARK | typeof CHOICE_SYSTEM;
-
-const VALID_CHOICES: readonly ThemeChoice[] = [CHOICE_LIGHT, CHOICE_DARK, CHOICE_SYSTEM];
-
 interface ThemeState {
   choice: ThemeChoice;
   systemDark: boolean;
 }
 
-function isThemeChoice(value: unknown): value is ThemeChoice {
-  return VALID_CHOICES.includes(value as ThemeChoice);
-}
-
 function readStoredChoice(): ThemeChoice {
   try {
     const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
-    return isThemeChoice(stored) ? stored : CHOICE_SYSTEM;
+    const result = safeParse(themeChoiceSchema, stored);
+    return result.success ? result.value : CHOICE_SYSTEM;
   } catch {
     return CHOICE_SYSTEM;
   }
@@ -73,11 +68,12 @@ export const ThemeStore = signalStore(
   }),
   withMethods((store) => ({
     setChoice(candidate: unknown): void {
-      if (!isThemeChoice(candidate)) {
+      const result = safeParse(themeChoiceSchema, candidate);
+      if (!result.success) {
         return;
       }
-      patchState(store, { choice: candidate });
-      persistStoredChoice(candidate);
+      patchState(store, { choice: result.value });
+      persistStoredChoice(result.value);
       applyRootMarker(store.effective());
     },
   })),
