@@ -1,15 +1,15 @@
 import { readFileSync } from "node:fs";
 
 /**
- * Scaffold token-purity spec (feature 002, US3).
- *
- * Reads the ACTUAL src/app/app.html and src/app/app.css and enforces FR-002:
- * no literal color values survive the scaffold, and every color utility used
- * is a semantic token utility from src/styles.css (single source of truth).
+ * Scaffold token-purity spec (feature 002, US3) — reconciled 2026-09-11 by
+ * feature 006: the chrome moved from `app.*` (now a thin `<router-outlet />`
+ * bootstrap) into `src/app/dashboard/*`. Token-purity and palette assertions
+ * now target the dashboard shell, which owns the token surface.
  */
 
 const appHtml = readFileSync("src/app/app.html", "utf8");
-const appCss = readFileSync("src/app/app.css", "utf8");
+const dashboardHtml = readFileSync("src/app/dashboard/dashboard.html", "utf8");
+const dashboardCss = readFileSync("src/app/dashboard/dashboard.css", "utf8");
 
 /** Token suffixes as they appear in Tailwind utility names (after "--color-"). */
 const THEME_TOKEN_SUFFIXES = [
@@ -54,17 +54,21 @@ function classNames(html: string): readonly string[] {
   return names;
 }
 
-describe("app token purity (feature 002, US3)", () => {
-  it("contains no literal color values in app.html", () => {
-    expect(appHtml.match(LITERAL_COLOR_PATTERN)).toBeNull();
+describe("dashboard token purity (feature 002, US3, reconciled by 006)", () => {
+  it("keeps the app bootstrap minimal (router-outlet only)", () => {
+    expect(appHtml.trim()).toBe("<router-outlet />");
   });
 
-  it("contains no literal color values in app.css", () => {
-    expect(appCss.match(LITERAL_COLOR_PATTERN)).toBeNull();
+  it("contains no literal color values in dashboard.html", () => {
+    expect(dashboardHtml.match(LITERAL_COLOR_PATTERN)).toBeNull();
   });
 
-  it("uses only token color utilities in app.html", () => {
-    const offenders = [...classNames(appHtml)].filter(
+  it("contains no literal color values in dashboard.css", () => {
+    expect(dashboardCss.match(LITERAL_COLOR_PATTERN)).toBeNull();
+  });
+
+  it("uses only token color utilities in dashboard.html", () => {
+    const offenders = [...classNames(dashboardHtml)].filter(
       (name) => COLOR_UTILITY_PREFIX.test(name) && !ALLOWED_COLOR_UTILITIES.has(name),
     );
     expect(offenders, `non-token color utilities found: ${offenders.join(", ") || "none"}`).toEqual(
@@ -80,12 +84,12 @@ describe("app token purity (feature 002, US3)", () => {
       "text-accent",
       "border-line",
     ]) {
-      expect(classNames(appHtml), `missing token utility ${className}`).toContain(className);
+      expect(classNames(dashboardHtml), `missing token utility ${className}`).toContain(className);
     }
   });
 
-  it("keeps the app shell wiring (<router-outlet> and the h1 greeting binding)", () => {
+  it("keeps the shell wiring (router-outlet and the brand title binding)", () => {
     expect(appHtml).toContain("<router-outlet");
-    expect(appHtml).toContain("{{ title() }}");
+    expect(dashboardHtml).toContain("{{ title }}");
   });
 });
