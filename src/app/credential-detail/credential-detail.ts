@@ -1,5 +1,5 @@
-import { Component, inject, signal } from "@angular/core";
-import { ActivatedRoute, RouterLink } from "@angular/router";
+import { Component, computed, inject, input, signal } from "@angular/core";
+import { RouterLink } from "@angular/router";
 import { VaultStore } from "../../vault/vault.store";
 
 @Component({
@@ -11,10 +11,7 @@ import { VaultStore } from "../../vault/vault.store";
 export class CredentialDetail {
   protected readonly store = inject(VaultStore);
   protected readonly revealed = signal(false);
-  private readonly route = inject(ActivatedRoute);
+  protected readonly id = input.required<string>();
 
-  protected get credential() {
-    const id = this.route.snapshot.paramMap.get("id") ?? "";
-    return this.store.getById(id);
-  }
+  protected readonly credential = computed(() => this.store.getById(this.id()));
 }

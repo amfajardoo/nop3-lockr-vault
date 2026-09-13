@@ -78,8 +78,11 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 ## Testing
 
 - Structure every test with the AAA pattern: separate the Arrange, Act, and Assert phases with blank lines (no section comments)
-- Reuse the shared test toolkit in `src/testing/` (`setupThemeTestBed`, `createFixture`, `query`, the storage/matchMedia stubs) instead of repeating TestBed and stub setup in every spec
-- Do NOT reset `document.documentElement` classes in `beforeEach`: each fresh `setupThemeTestBed` re-instantiates the store, which re-applies the correct root marker on init
+- Reuse the shared test toolkit in `src/testing/` (`setupModule`, `createFixture`, `query`, the storage/matchMedia stubs) instead of repeating TestBed and stub setup in every spec
+  - `setupModule({ providers: [...] })` for components without theme
+  - `setupModule({ providers: [...], theme: {} })` when the component tree includes `ThemeToggle` (returns `{ storage, media }` handles)
+  - `replaceThemeToggleWithStub()` replaces the real toggle with an empty stub in specs that mount the Dashboard (app.spec, dashboard.spec)
+- For routed components, prefer `withComponentInputBinding()` in `provideRouter` so route params arrive as signal `input()` — no `ActivatedRoute` injection needed; in specs, set the input via `fixture.componentRef.setInput("param", value)`
 
 ### Reliable tests (applies to all test types: unit, component)
 
@@ -100,7 +103,7 @@ be strengthened.
 - If a component needs a **custom harness**, add `@angular/cdk/testing` to install the harness base classes and
   build the harness from them. Treat that install as a tooling change (own commit, per the Branching policy).
 - Otherwise, component tests should limit themselves to the shared test toolkit in `src/testing/`
-  (`setupThemeTestBed`, `createFixture`, `query`) plus harness locators — no ad-hoc `fixture.nativeElement`
+  (`setupModule`, `createFixture`, `query`) plus harness locators — no ad-hoc `fixture.nativeElement`
   spelunking when a harness path exists.
 - Harness-based specs still must pass the same **mutant check**: deleting/altering the code the harness
   interacts with must fail the spec.

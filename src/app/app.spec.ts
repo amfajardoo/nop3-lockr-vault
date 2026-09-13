@@ -1,20 +1,15 @@
 import { provideRouter } from "@angular/router";
 import { RouterTestingHarness } from "@angular/router/testing";
 import { cleanState } from "@testing/clean-state";
-import { setupModule } from "@testing/setup-module";
-import { createFixture } from "@testing/setup-theme";
-import { installThemeMediaQueryStub, installThemeStorage } from "@testing/theme-stubs";
-import { restoreWindowStubs } from "@testing/window-stubs";
-import { ThemeStore } from "@theme/theme.store";
+import { createFixture, setupModule } from "@testing/setup-module";
+import { replaceThemeToggleWithStub } from "@testing/theme-toggle-stub";
 import { App } from "./app";
 import { routes } from "./app.routes";
 
 describe("App bootstrap (feature 006, US1): thin root over a routable dashboard", () => {
   const app = cleanState(() => {
-    setupModule({ providers: [ThemeStore, provideRouter(routes)] });
-    restoreWindowStubs();
-    installThemeMediaQueryStub(false);
-    installThemeStorage(null);
+    setupModule({ providers: [provideRouter(routes)] });
+    replaceThemeToggleWithStub();
     return { fixture: createFixture(App) };
   });
 

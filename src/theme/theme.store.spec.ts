@@ -1,12 +1,8 @@
 import { inject } from "@angular/core";
 import { TestBed } from "@angular/core/testing";
-import { setupThemeTestBed } from "@testing/setup-theme";
-import {
-  installThemeMediaQueryStub,
-  installThemeStorage,
-  type MediaQueryStub,
-  type StorageStub,
-} from "@testing/theme-stubs";
+import { cleanState } from "@testing/clean-state";
+import { setupModule } from "@testing/setup-module";
+import { installThemeMediaQueryStub, installThemeStorage } from "@testing/theme-stubs";
 import { ThemeStore, type ThemeStoreInstance } from "@theme/theme.store";
 import { CHOICE_DARK, CHOICE_LIGHT, CHOICE_SYSTEM } from "./theme-contract";
 
@@ -19,11 +15,9 @@ function createStore(): ThemeStoreInstance {
 }
 
 describe("theme store (feature 003, US1): init & persistence", () => {
-  let storage: StorageStub;
-
-  beforeEach(() => {
-    const handles = setupThemeTestBed();
-    storage = handles.storage;
+  const theme = cleanState(() => {
+    const handles = setupModule({ theme: {} });
+    return { storage: handles.storage };
   });
 
   it("initializes to system and writes nothing when no stored value exists", () => {
@@ -31,11 +25,11 @@ describe("theme store (feature 003, US1): init & persistence", () => {
 
     expect(store.choice()).toBe(CHOICE_SYSTEM);
     expect(store.effective()).toBe("light");
-    expect(storage.getWrites()).toHaveLength(0);
+    expect(theme.storage.getWrites()).toHaveLength(0);
   });
 
   it("initializes to the stored explicit dark choice", () => {
-    storage = installThemeStorage(CHOICE_DARK);
+    theme.storage = installThemeStorage(CHOICE_DARK);
 
     const store = createStore();
 
@@ -45,7 +39,7 @@ describe("theme store (feature 003, US1): init & persistence", () => {
   });
 
   it("initializes to the stored explicit light choice", () => {
-    storage = installThemeStorage(CHOICE_LIGHT);
+    theme.storage = installThemeStorage(CHOICE_LIGHT);
 
     const store = createStore();
 
@@ -56,7 +50,7 @@ describe("theme store (feature 003, US1): init & persistence", () => {
 
   it("honors system when stored system and OS is dark", () => {
     installThemeMediaQueryStub(true);
-    storage = installThemeStorage(CHOICE_SYSTEM);
+    theme.storage = installThemeStorage(CHOICE_SYSTEM);
 
     const store = createStore();
 
@@ -66,30 +60,30 @@ describe("theme store (feature 003, US1): init & persistence", () => {
   });
 
   it("falls back to system for corrupt values without overwriting them", () => {
-    storage = installThemeStorage("bogus");
+    theme.storage = installThemeStorage("bogus");
 
     const store = createStore();
 
     expect(store.choice()).toBe(CHOICE_SYSTEM);
     expect(store.effective()).toBe("light");
-    expect(storage.getWrites()).toHaveLength(0);
-    expect(storage.getState()).toBe("bogus");
+    expect(theme.storage.getWrites()).toHaveLength(0);
+    expect(theme.storage.getState()).toBe("bogus");
   });
 
   it("falls back to system for empty and JSON-wrapped values", () => {
     for (const corrupt of ["", '"dark"', "{}", "null"]) {
-      storage = installThemeStorage(corrupt);
+      theme.storage = installThemeStorage(corrupt);
 
       const store = createStore();
 
       expect(store.choice(), `input ${corrupt}`).toBe(CHOICE_SYSTEM);
-      expect(storage.getWrites()).toHaveLength(0);
-      expect(storage.getState(), `input ${corrupt}`).toBe(corrupt);
+      expect(theme.storage.getWrites()).toHaveLength(0);
+      expect(theme.storage.getState(), `input ${corrupt}`).toBe(corrupt);
     }
   });
 
-  it("never throws when storage access is blocked", () => {
-    storage = installThemeStorage(null, { throwOnGet: true });
+  it("never throws when theme.storage access is blocked", () => {
+    theme.storage = installThemeStorage(null, { throwOnGet: true });
 
     const store = createStore();
 
@@ -102,7 +96,7 @@ describe("theme store (feature 003, US1): init & persistence", () => {
 
     store.setChoice(CHOICE_LIGHT);
 
-    expect(storage.getState()).toBe(CHOICE_LIGHT);
+    expect(theme.storage.getState()).toBe(CHOICE_LIGHT);
     expect(store.choice()).toBe(CHOICE_LIGHT);
     expect(store.effective()).toBe("light");
     expect(rootHasDark()).toBe(false);
@@ -113,7 +107,7 @@ describe("theme store (feature 003, US1): init & persistence", () => {
 
     store.setChoice(CHOICE_DARK);
 
-    expect(storage.getState()).toBe(CHOICE_DARK);
+    expect(theme.storage.getState()).toBe(CHOICE_DARK);
     expect(store.choice()).toBe(CHOICE_DARK);
     expect(store.effective()).toBe("dark");
     expect(rootHasDark()).toBe(true);
@@ -124,7 +118,7 @@ describe("theme store (feature 003, US1): init & persistence", () => {
 
     store.setChoice(CHOICE_SYSTEM);
 
-    expect(storage.getState()).toBe(CHOICE_SYSTEM);
+    expect(theme.storage.getState()).toBe(CHOICE_SYSTEM);
     expect(store.choice()).toBe(CHOICE_SYSTEM);
     expect(store.effective()).toBe("light");
     expect(rootHasDark()).toBe(false);
@@ -136,19 +130,15 @@ describe("theme store (feature 003, US1): init & persistence", () => {
     store.setChoice("neon" as never);
 
     expect(store.choice()).toBe(CHOICE_SYSTEM);
-    expect(storage.getWrites()).toHaveLength(0);
-    expect(storage.getState()).toBeNull();
+    expect(theme.storage.getWrites()).toHaveLength(0);
+    expect(theme.storage.getState()).toBeNull();
   });
 });
 
 describe("theme store (feature 003, US2): OS-following", () => {
-  let media: MediaQueryStub;
-  let storage: StorageStub;
-
-  beforeEach(() => {
-    const handles = setupThemeTestBed();
-    media = handles.media;
-    storage = handles.storage;
+  const theme = cleanState(() => {
+    const handles = setupModule({ theme: {} });
+    return { media: handles.media, storage: handles.storage };
   });
 
   it("tracks the OS live while choice is system", () => {
@@ -159,20 +149,20 @@ describe("theme store (feature 003, US2): OS-following", () => {
     expect(store.effective()).toBe("light");
     expect(rootHasDark()).toBe(false);
 
-    media.dispatch(true);
+    theme.media.dispatch(true);
 
     expect(store.effective()).toBe("dark");
     expect(rootHasDark()).toBe(true);
-    expect(storage.getWrites()).toEqual([CHOICE_SYSTEM]);
+    expect(theme.storage.getWrites()).toEqual([CHOICE_SYSTEM]);
 
-    media.dispatch(false);
+    theme.media.dispatch(false);
 
     expect(store.effective()).toBe("light");
     expect(rootHasDark()).toBe(false);
   });
 
   it("initializes from a dark OS when in system mode", () => {
-    media = installThemeMediaQueryStub(true);
+    theme.media = installThemeMediaQueryStub(true);
 
     const store = createStore();
 
@@ -186,14 +176,14 @@ describe("theme store (feature 003, US2): OS-following", () => {
     const store = createStore();
 
     store.setChoice(CHOICE_DARK);
-    const writesAfterChoice = storage.getWrites().length;
+    const writesAfterChoice = theme.storage.getWrites().length;
 
-    media.dispatch(false);
+    theme.media.dispatch(false);
 
     expect(store.effective()).toBe("dark");
     expect(rootHasDark()).toBe(true);
     expect(store.choice()).toBe(CHOICE_DARK);
-    expect(storage.getWrites()).toHaveLength(writesAfterChoice);
+    expect(theme.storage.getWrites()).toHaveLength(writesAfterChoice);
   });
 
   it("switches from explicit to system and back without leaving stale listeners", () => {
@@ -202,16 +192,16 @@ describe("theme store (feature 003, US2): OS-following", () => {
     store.setChoice(CHOICE_DARK);
     store.setChoice(CHOICE_SYSTEM);
 
-    media.dispatch(true);
+    theme.media.dispatch(true);
 
     expect(store.effective()).toBe("dark");
 
-    media.dispatch(false);
+    theme.media.dispatch(false);
 
     expect(store.effective()).toBe("light");
 
     store.setChoice(CHOICE_DARK);
-    media.dispatch(true);
+    theme.media.dispatch(true);
 
     expect(store.effective()).toBe("dark");
   });
