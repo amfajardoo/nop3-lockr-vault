@@ -6,7 +6,6 @@ import { setupThemeTestBed } from "@testing/setup-theme";
 import axe from "axe-core";
 import { VaultStore, type VaultStoreInstance } from "../../vault/vault.store";
 import { routes } from "../app.routes";
-import { CredentialDetail } from "./credential-detail";
 
 const DETAIL_AXE_RULES = [
   "aria-allowed-role",
