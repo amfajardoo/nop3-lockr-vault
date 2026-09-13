@@ -1,9 +1,6 @@
 <!-- Sync Impact Report
-Version change: 1.0.0 → 2.0.0 (MAJOR)
-Modified principles: Accessibility clause redefined — axe-core/Playwright dropped; a11y relies on Angular Material component guarantees verified by jsdom unit specs. Repository Governance folder structure updated to remove /e2e/ browser tests.
-Added sections: none. The Angular Material direction is declared as a UI principle under Core Principles (VIII).
-Removed sections: none (individual principles amended in place).
-Follow-up TODOs: materialization feature to swap the Tailwind-based UI shell for Angular Material is pending specification; until then the Tailwind styling layer remains and is declared ephemeral.
+Version change: 2.0.0 → 2.0.1 (PATCH, 2026-09-13): Tailwind styling layer removed (013); tokens remain as CSS variables in src/styles.css; features consume Material theming or those variables directly.
+Earlier: 1.0.0 → 2.0.0 (MAJOR): Accessibility clause redefined — axe-core/Playwright dropped; a11y relies on Angular Material component guarantees verified by jsdom unit specs. Repository Governance folder structure updated to remove /e2e/ browser tests. The Angular Material direction is declared as a UI principle under Core Principles (VIII).
 --> 
 # Lockr Vault Constitution
 
@@ -56,10 +53,9 @@ opened.
 
 The application UI is built on **Angular Material**. Custom implementation is the exception,
 not the rule: any component that Material provides MUST be used instead of bespoke markup.
-Custom style layers are ephemeral. The Tailwind-based styling (design tokens exposed as CSS
-variables in `src/styles.css`) is a **bridge layer** kept only until the Material migration
-lands; it is NOT to be extended with new utilities, and every new feature SHOULD consume
-Material theming (Sass tokens) directly instead.
+The Tailwind styling layer was removed in 013; the design tokens remain exposed as CSS
+variables in `src/styles.css`, and every feature MUST consume Material theming (Sass tokens)
+or those CSS variables directly.
 
 ### VII. Test Quality (Human-Representative)
 

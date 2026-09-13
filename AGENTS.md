@@ -50,8 +50,9 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Do NOT use `ngClass`, use `class` bindings instead
 - Do NOT use `ngStyle`, use `style` bindings instead
 - When using external templates/styles, use paths relative to the component TS file.
-- Tailwind utility classes are a **bridge layer** toward Material: do not add new Tailwind utilities; consume
-  the CSS variables (or Material theming) directly in new code.
+- The Tailwind dependency was dropped in 013; any leftover utility classes in templates are
+  dead style hooks pending the Angular Material migration and MUST NOT be reintroduced as new
+  utilities. Consume the CSS variables (or Material theming) directly in new code.
 
 ## State Management
 

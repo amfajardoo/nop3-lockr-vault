@@ -2,13 +2,14 @@ import { readFileSync } from "node:fs";
 import { contrastRatio } from "./contrast";
 
 /**
- * Token CSS spec (feature 002, US2).
+ * Token CSS spec (feature 002, US2, reconciled 2026-09-13 by feature 013).
  *
  * Reads the ACTUAL src/styles.css and asserts the class-driven dark-mode
- * wiring: dark-variant placement, token parity between `:root` and `.dark`,
- * the `@theme inline` utility mapping, `color-scheme`, and the FR-005 AA
- * invariants recomputed from the parsed token values (text >= 4.5:1,
- * non-text >= 3:1) in BOTH palettes.
+ * wiring: token parity between `:root` and `.dark`, `color-scheme`, and the
+ * FR-005 AA invariants recomputed from the parsed token values (text >= 4.5:1,
+ * non-text >= 3:1) in BOTH palettes. Tailwind-specific constructs
+ * (`@import "tailwindcss"`, `@custom-variant`, `@theme inline`) were removed
+ * when the Tailwind dependency was dropped (013).
  */
 
 const styles = readFileSync("src/styles.css", "utf8");
@@ -43,7 +44,7 @@ const INFO = "--info";
 const MIN_TEXT_RATIO = 4.5;
 const MIN_NON_TEXT_RATIO = 3;
 
-/** Extracts a CSS rule body for `selectorPattern` (e.g. ":root", "\\.dark", "@theme inline"). */
+/** Extracts a CSS rule body for `selectorPattern` (e.g. ":root", "\\.dark"). */
 function extractBlock(css: string, selectorPattern: string): string {
   return css.match(new RegExp(`${selectorPattern}\\s*\\{([^}]*)\\}`))?.[1] ?? "";
 }
@@ -116,26 +117,6 @@ function buildInvariantCases(): readonly InvariantCase[] {
   return cases;
 }
 
-describe("src/styles.css dark variant wiring", () => {
-  const importStatement = '@import "tailwindcss";';
-  const variant = "@custom-variant dark (&:where(.dark, .dark *));";
-
-  it("imports Tailwind first", () => {
-    expect(styles).toContain(importStatement);
-  });
-
-  it("declares the dark variant immediately after the Tailwind import", () => {
-    const importIndex = styles.indexOf(importStatement);
-    const variantIndex = styles.indexOf(variant);
-    expect(variantIndex).toBeGreaterThan(importIndex);
-    expect(styles.slice(importIndex + importStatement.length, variantIndex).trim()).toBe("");
-  });
-
-  it("declares the dark variant exactly once", () => {
-    expect(styles.split(variant)).toHaveLength(2);
-  });
-});
-
 describe("token parity between :root and .dark", () => {
   it(`:root defines every semantic token (${THEME_TOKENS.length})`, () => {
     for (const token of THEME_TOKENS) {
@@ -152,21 +133,6 @@ describe("token parity between :root and .dark", () => {
       expect(tokens[token], `${palette} ${token}`).toMatch(/^#[0-9a-f]{6}$/i);
     }
   });
-});
-
-describe("@theme inline utility mapping", () => {
-  const themeBlock = singleLine(extractBlock(styles, "@theme inline"));
-
-  it("defines the @theme inline block", () => {
-    expect(themeBlock).toContain("--color-");
-  });
-
-  it.each(THEME_TOKENS.map((token) => [token, token.slice("--".length)] as const))(
-    "maps %s to a --color-%s Tailwind utility",
-    (token, suffix) => {
-      expect(themeBlock).toMatch(new RegExp(`--color-${suffix}\\s*:\\s*var\\(${token}\\)`));
-    },
-  );
 });
 
 describe("color-scheme wiring", () => {
