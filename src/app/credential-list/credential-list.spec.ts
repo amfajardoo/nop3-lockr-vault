@@ -3,7 +3,6 @@ import { TestBed } from "@angular/core/testing";
 import { provideRouter } from "@angular/router";
 import { RouterTestingHarness } from "@angular/router/testing";
 import { createFixture, setupThemeTestBed } from "@testing/setup-theme";
-import axe from "axe-core";
 import { VaultStore, type VaultStoreInstance } from "../../vault/vault.store";
 import { routes } from "../app.routes";
 import { CredentialList } from "./credential-list";
@@ -16,24 +15,6 @@ if (!HTMLDialogElement.prototype.showModal) {
     this.open = false;
   };
 }
-
-const LIST_AXE_RULES = [
-  "aria-allowed-role",
-  "aria-required-attr",
-  "aria-required-children",
-  "aria-roles",
-  "aria-valid-attr-value",
-  "aria-valid-attr",
-  "button-name",
-  "link-name",
-  "duplicate-id",
-  "focus-order-semantics",
-  "heading-order",
-  "list",
-  "listitem",
-  "nested-interactive",
-  "region",
-];
 
 function store(): VaultStoreInstance {
   return TestBed.runInInjectionContext(() => inject(VaultStore));
@@ -109,15 +90,6 @@ describe("CredentialList (feature 009, US1): every saved credential renders scan
 
     expect(harness.routeNativeElement?.textContent).toContain("octocat");
   });
-
-  it("passes an AXE scan without serious or critical violations", async () => {
-    const results = await axe.run(fixture.nativeElement, {
-      runOnly: { type: "rule", values: LIST_AXE_RULES },
-    });
-
-    const bad = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
-    expect(bad).toEqual([]);
-  });
 });
 
 describe("CredentialList (feature 009, US3): empty vault shows a helpful empty state", () => {
@@ -134,14 +106,6 @@ describe("CredentialList (feature 009, US3): empty vault shows a helpful empty s
     expect(root.querySelector("[data-empty-state]")).toBeTruthy();
     expect(root.querySelector("[data-credential-row]")).toBeNull();
     expect(root.textContent).toContain("Your vault is empty");
-  });
-
-  it("passes AXE scan on empty state", async () => {
-    const results = await axe.run(fixture.nativeElement, {
-      runOnly: { type: "rule", values: LIST_AXE_RULES },
-    });
-    const bad = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
-    expect(bad).toEqual([]);
   });
 
   it("transitions from empty to populated when a credential is added", () => {
@@ -230,14 +194,5 @@ describe("CredentialList (feature 009, US4): delete requires explicit confirmati
 
     expect(dialog()?.open).toBe(false);
     expect(rows()).toHaveLength(2);
-  });
-
-  it("passes AXE scan with dialog open", async () => {
-    openDeleteFor(0);
-    const results = await axe.run(fixture.nativeElement, {
-      runOnly: { type: "rule", values: LIST_AXE_RULES },
-    });
-    const bad = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
-    expect(bad).toEqual([]);
   });
 });

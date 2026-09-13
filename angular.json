@@ -4,7 +4,7 @@
   "cli": {
     "packageManager": "pnpm",
     "analytics": false,
-    "schematicCollections": ["@schematics/angular", "playwright-ng-schematics"]
+    "schematicCollections": ["@schematics/angular"]
   },
   "newProjectRoot": "projects",
   "projects": {
@@ -66,17 +66,6 @@
         },
         "test": {
           "builder": "@angular/build:unit-test"
-        },
-        "e2e": {
-          "builder": "playwright-ng-schematics:playwright",
-          "options": {
-            "devServerTarget": "nop3-lockr-vault:serve"
-          },
-          "configurations": {
-            "production": {
-              "devServerTarget": "nop3-lockr-vault:serve:production"
-            }
-          }
         }
       }
     }

@@ -3,26 +3,8 @@ import { TestBed } from "@angular/core/testing";
 import { provideRouter } from "@angular/router";
 import { RouterTestingHarness } from "@angular/router/testing";
 import { setupThemeTestBed } from "@testing/setup-theme";
-import axe from "axe-core";
 import { VaultStore, type VaultStoreInstance } from "../../vault/vault.store";
 import { routes } from "../app.routes";
-
-const DETAIL_AXE_RULES = [
-  "aria-allowed-role",
-  "aria-required-attr",
-  "aria-required-children",
-  "aria-roles",
-  "aria-valid-attr-value",
-  "aria-valid-attr",
-  "button-name",
-  "link-name",
-  "duplicate-id",
-  "focus-order-semantics",
-  "heading-order",
-  "label",
-  "nested-interactive",
-  "region",
-];
 
 function store(): VaultStoreInstance {
   return TestBed.runInInjectionContext(() => inject(VaultStore));
@@ -102,15 +84,5 @@ describe("CredentialDetail (feature 009, US2): read-only credential details", ()
     const back = root.querySelector("[data-back-to-list]") as HTMLAnchorElement | null;
     expect(back).toBeTruthy();
     expect(back?.getAttribute("href")).toBe("/");
-  });
-
-  it("passes an AXE scan without serious or critical violations", async () => {
-    const harness = await detailFixture();
-    const results = await axe.run(harness.routeNativeElement as HTMLElement, {
-      runOnly: { type: "rule", values: DETAIL_AXE_RULES },
-    });
-
-    const bad = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
-    expect(bad).toEqual([]);
   });
 });

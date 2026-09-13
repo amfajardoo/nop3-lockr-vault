@@ -38,12 +38,3 @@ yarn-error.log
 testem.log
 /typings
 __screenshots__/
-
-# System files
-.DS_Store
-Thumbs.db
-
-# Playwright
-/test-results/
-/playwright-report/
-/playwright/.cache/

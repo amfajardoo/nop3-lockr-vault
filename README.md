@@ -61,11 +61,6 @@ To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use th
 pnpm test
 ```
 
-## Running end-to-end tests
-
-End-to-end testing is not configured yet; the `ng e2e` command is covered by the upcoming
-theme/shell features. You can choose a framework that suits your needs when that is added.
-
 ## Additional Resources
 
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
