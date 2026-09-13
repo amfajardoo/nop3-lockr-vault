@@ -1,7 +1,3 @@
-@import "tailwindcss";
-
-@custom-variant dark (&:where(.dark, .dark *));
-
 :root {
   color-scheme: light;
 
@@ -36,24 +32,7 @@
   --info: #a5b4fc;
 }
 
-@theme inline {
-  --color-surface: var(--surface);
-  --color-surface-raised: var(--surface-raised);
-  --color-foreground: var(--foreground);
-  --color-muted: var(--muted);
-  --color-accent: var(--accent);
-  --color-on-accent: var(--on-accent);
-  --color-line: var(--line);
-  --color-line-subtle: var(--line-subtle);
-  --color-success: var(--success);
-  --color-warning: var(--warning);
-  --color-error: var(--error);
-  --color-info: var(--info);
-}
-
-@layer base {
-  body {
-    background-color: var(--surface);
-    color: var(--foreground);
-  }
+body {
+  background-color: var(--surface);
+  color: var(--foreground);
 }
