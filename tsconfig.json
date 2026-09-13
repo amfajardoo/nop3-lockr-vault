@@ -32,15 +32,6 @@
     },
     {
       "path": "./tsconfig.spec.json"
-    },
-    {
-      "path": "./e2e/tsconfig.json"
-    },
-    {
-      "path": "./playwright/tsconfig.json"
-    },
-    {
-      "path": "./tests/tsconfig.json"
     }
   ]
 }

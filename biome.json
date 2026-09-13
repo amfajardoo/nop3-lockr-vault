@@ -12,8 +12,6 @@
       "!**/node_modules",
       "!**/.angular",
       "!**/coverage",
-      "!**/playwright-report",
-      "!**/test-results",
       "!**/.specify",
       "!**/.opencode"
     ]

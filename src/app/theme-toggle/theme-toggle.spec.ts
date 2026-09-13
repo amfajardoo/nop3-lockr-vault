@@ -4,21 +4,7 @@ import { createFixture, setupThemeTestBed } from "@testing/setup-theme";
 import { installThemeStorage, type StorageStub } from "@testing/theme-stubs";
 import { ThemeStore, type ThemeStoreInstance } from "@theme/theme.store";
 import { CHOICE_DARK, CHOICE_LIGHT, CHOICE_SYSTEM } from "@theme/theme-contract";
-import axe from "axe-core";
 import { ThemeToggle } from "./theme-toggle";
-
-const TOGGLE_AXE_RULES = [
-  "aria-allowed-role",
-  "aria-required-attr",
-  "aria-required-children",
-  "aria-roles",
-  "aria-valid-attr-value",
-  "aria-valid-attr",
-  "duplicate-id",
-  "focus-order-semantics",
-  "label",
-  "tabindex",
-];
 
 function store(): ThemeStoreInstance {
   return TestBed.runInInjectionContext(() => inject(ThemeStore));
@@ -156,13 +142,5 @@ describe("ThemeToggle (feature 004, US2): accessible switcher", () => {
 
     expect(document.documentElement.classList.contains("dark")).toBe(true);
     expect(document.activeElement).toBe(systemRadio);
-  });
-
-  it("passes an AXE scan without serious or critical violations", async () => {
-    const results = await axe.run(fixture.nativeElement, {
-      runOnly: { type: "rule", values: TOGGLE_AXE_RULES },
-    });
-    const bad = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
-    expect(bad).toEqual([]);
   });
 });

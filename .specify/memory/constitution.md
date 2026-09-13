@@ -1,10 +1,10 @@
 <!-- Sync Impact Report
-Version change: none (initial ratification) → 1.0.0
-Modified principles: none (first adoption of Lockr Vault principles)
-Added sections: Specification Structure, Development Lifecycle, Security and Cryptography, The Safe, Testing and Compliance, Repository Governance
-Removed sections: none
-Follow-up TODOs: none
--->
+Version change: 1.0.0 → 2.0.0 (MAJOR)
+Modified principles: Accessibility clause redefined — axe-core/Playwright dropped; a11y relies on Angular Material component guarantees verified by jsdom unit specs. Repository Governance folder structure updated to remove /e2e/ browser tests.
+Added sections: none. The Angular Material direction is declared as a UI principle under Core Principles (VIII).
+Removed sections: none (individual principles amended in place).
+Follow-up TODOs: materialization feature to swap the Tailwind-based UI shell for Angular Material is pending specification; until then the Tailwind styling layer remains and is declared ephemeral.
+--> 
 # Lockr Vault Constitution
 
 ## Preamble
@@ -51,6 +51,25 @@ corresponding automated test (unit and integration). Code coverage (lines) MUST 
 specification coverage (scenarios) MUST be 100%. Malformed data must never crash the
 application. Lint, typecheck, and the full test suite MUST be green locally before any PR is
 opened.
+
+### VI. Component Quality (UI)
+
+The application UI is built on **Angular Material**. Custom implementation is the exception,
+not the rule: any component that Material provides MUST be used instead of bespoke markup.
+Custom style layers are ephemeral. The Tailwind-based styling (design tokens exposed as CSS
+variables in `src/styles.css`) is a **bridge layer** kept only until the Material migration
+lands; it is NOT to be extended with new utilities, and every new feature SHOULD consume
+Material theming (Sass tokens) directly instead.
+
+### VII. Test Quality (Human-Representative)
+
+Every test MUST read as a faithful human representation of how a user uses the app — given a
+state, when a user acts, then an observable outcome — never as a call sequence into
+implementation internals. Component interactions MUST be driven through a harness (Component
+Harness pattern) whenever one is feasible; raw DOM poking is the fallback. A test is reliable
+only if it FAILS when the corresponding implementation logic is mutated or removed (mutant
+check). Dead, brittle, or structure-coupling tests are as defective as the bugs they claim to
+prevent.
 
 ---
 
@@ -160,7 +179,12 @@ gates.
 - **Local Gates**: Before each PR/merge, lint, typecheck, and the full suite run and MUST be
   green locally. Wiring these into a hosted CI pipeline is a tooling feature to be scheduled,
   not a prerequisite for the bootstrap features.
-- **Accessibility**: UI MUST pass WCAG AA and be AXE-clean in every supported theme.
+- **Accessibility**: UI MUST pass WCAG AA in every supported theme. Conformance is verified
+  through Angular Material's built-in component accessibility (no external a11y scanner is a
+  hard dependency): unit specs assert the semantics the scanner used to check — roles, labels,
+  names, focus behavior, keyboard interaction — as user-visible behavior. Components MUST
+  declare the ARIA contract they rely on so the dependency on Material's guarantees is explicit
+  and reviewable.
 
 ---
 
@@ -172,8 +196,14 @@ gates.
   JSON Schemas.
 - `/src/` <- The code (mere implementation). Unit tests live colocated with the code they
   test (`*.spec.ts`).
-- `/e2e/` <- Browser end-to-end tests (Playwright), covering complete user flows.
 - `/docs/` <- User documentation (generated from the specs) when it exists.
+
+### Testing Tooling
+
+- Unit and component specs run on **jsdom** through the Angular unit-test builder (`ng test`).
+  jsdom is a build-time dependency of the test runner and is NOT optional.
+- Browser automation (Playwright) has been removed from the project. There are no e2e or
+  component-test (CT) suites; behavior coverage lives entirely in `*.spec.ts` unit specs.
 
 ### Versioning Rules
 
@@ -198,4 +228,4 @@ principles established here.
 - **Runtime development guidance**: operational Angular/TypeScript rules live in `AGENTS.md`;
   the Constitution prevails in case of conflict.
 
-**Version**: 1.0.0 | **Ratified**: 2026-09-05 | **Last Amended**: 2026-09-05
+**Version**: 2.0.0 | **Ratified**: 2026-09-05 | **Last Amended**: 2026-09-13

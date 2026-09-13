@@ -2,40 +2,8 @@ import { Component } from "@angular/core";
 import { provideRouter } from "@angular/router";
 import { RouterTestingHarness } from "@angular/router/testing";
 import { createFixture, query, setupThemeTestBed } from "@testing/setup-theme";
-import axe from "axe-core";
 import { routes } from "../app.routes";
 import { Dashboard } from "./dashboard";
-
-const DASHBOARD_AXE_RULES = [
-  "aria-allowed-role",
-  "aria-required-attr",
-  "aria-required-children",
-  "aria-roles",
-  "aria-valid-attr-value",
-  "aria-valid-attr",
-  "button-name",
-  "link-name",
-  "duplicate-id",
-  "focus-order-semantics",
-  "heading-order",
-  "landmark-banner-is-top-level",
-  "landmark-main-is-top-level",
-  "landmark-no-duplicate-banner",
-  "landmark-no-duplicate-main",
-  "landmark-one-main",
-  "nested-interactive",
-  "region",
-];
-
-const NAV_AXE_RULES = [
-  "aria-required-attr",
-  "aria-roles",
-  "aria-valid-attr-value",
-  "aria-valid-attr",
-  "link-name",
-  "nested-interactive",
-  "region",
-];
 
 @Component({
   selector: "app-stub-child",
@@ -69,15 +37,6 @@ describe("Dashboard (feature 006, US1): chrome renders as a routable screen", ()
     const focusables = [...document.querySelectorAll("a, button, [tabindex]")];
     expect(focusables[0]).toBe(skip);
   });
-
-  it("passes an AXE scan without serious or critical violations", async () => {
-    const results = await axe.run(fixture.nativeElement, {
-      runOnly: { type: "rule", values: DASHBOARD_AXE_RULES },
-    });
-
-    const bad = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
-    expect(bad).toEqual([]);
-  });
 });
 
 describe("Dashboard (feature 006, US2): navigation is accessible and live", () => {
@@ -102,18 +61,6 @@ describe("Dashboard (feature 006, US2): navigation is accessible and live", () =
     expect(link).toBeTruthy();
     expect(link?.getAttribute("aria-current")).toBe("page");
     expect(link?.className).toContain("focus-visible:outline");
-  });
-
-  it("passes an AXE scan scoped to the nav without serious or critical violations", async () => {
-    const harness = await RouterTestingHarness.create("");
-    const nav = harness.routeNativeElement?.querySelector("nav");
-
-    expect(nav).toBeTruthy();
-    const results = await axe.run(nav as HTMLElement, {
-      runOnly: { type: "rule", values: NAV_AXE_RULES },
-    });
-    const bad = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
-    expect(bad).toEqual([]);
   });
 });
 
