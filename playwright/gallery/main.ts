@@ -1,6 +1,7 @@
 import "@angular/compiler";
 import { type ApplicationRef, type ComponentRef, createComponent, type Type } from "@angular/core";
 import { createApplication } from "@angular/platform-browser";
+import { provideRouter } from "@angular/router";
 
 import { resolveComponentResourcesForTemplates } from "./vite.component-resource";
 
@@ -58,7 +59,7 @@ window.mount = async ({ story, props }: MountOptions): Promise<void> => {
   const resolved = await resolve(story);
   if (!app) {
     await resolveComponentResourcesForTemplates();
-    app = await createApplication();
+    app = await createApplication({ providers: [provideRouter([])] });
   }
   if (component && mountedStory !== resolved) {
     app.detachView(component.hostView);
