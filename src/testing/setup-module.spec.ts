@@ -6,6 +6,7 @@ import {
   setDynamicTemplateComponentInstance,
 } from "@testing/dynamic-template";
 import { setupModule } from "@testing/setup-module";
+import { ThemeStore, type ThemeStoreInstance } from "@theme/theme.store";
 
 const PLAIN_TOKEN = new InjectionToken<string>("plain");
 const SUPER_TOKEN = new InjectionToken<string>("super");
@@ -55,5 +56,17 @@ describe("setupModule (shared testing helper)", () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent.trim()).toBe("Hello - 5");
+  });
+
+  it("provides the ThemeStore and window stubs when theme is requested", () => {
+    const handles = setupModule({ theme: {} });
+
+    const store: ThemeStoreInstance = TestBed.runInInjectionContext(() =>
+      TestBed.inject(ThemeStore),
+    );
+
+    expect(store.choice()).toBe("system");
+    expect(handles.media).toBeDefined();
+    expect(handles.storage).toBeDefined();
   });
 });

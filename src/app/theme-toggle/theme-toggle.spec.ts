@@ -1,9 +1,14 @@
+import { TestbedHarnessEnvironment } from "@angular/cdk/testing/testbed";
 import { inject } from "@angular/core";
-import { type ComponentFixture, TestBed } from "@angular/core/testing";
-import { createFixture, setupThemeTestBed } from "@testing/setup-theme";
-import { installThemeStorage, type StorageStub } from "@testing/theme-stubs";
+import { TestBed } from "@angular/core/testing";
+import { MatRadioGroupHarness } from "@angular/material/radio/testing";
+
+import { cleanState } from "@testing/clean-state";
+import { createFixture, setupModule } from "@testing/setup-module";
+import { installThemeStorage } from "@testing/theme-stubs";
 import { ThemeStore, type ThemeStoreInstance } from "@theme/theme.store";
 import { CHOICE_DARK, CHOICE_LIGHT, CHOICE_SYSTEM } from "@theme/theme-contract";
+
 import { ThemeToggle } from "./theme-toggle";
 
 function store(): ThemeStoreInstance {
@@ -11,136 +16,116 @@ function store(): ThemeStoreInstance {
 }
 
 describe("ThemeToggle (feature 004, US2): accessible switcher", () => {
-  let media: ReturnType<typeof setupThemeTestBed>["media"];
-  let storage: StorageStub;
-  let fixture: ComponentFixture<ThemeToggle>;
-
-  beforeEach(() => {
-    const handles = setupThemeTestBed();
-    media = handles.media;
-    storage = handles.storage;
-    fixture = createFixture(ThemeToggle);
+  const toggle = cleanState(() => {
+    const handles = setupModule({ theme: {} });
+    return {
+      fixture: createFixture(ThemeToggle),
+      media: handles.media,
+      storage: handles.storage,
+    };
   });
 
-  function radios(): HTMLInputElement[] {
-    return [...fixture.nativeElement.querySelectorAll('input[type="radio"]')] as HTMLInputElement[];
+  function groupHarness(): Promise<MatRadioGroupHarness> {
+    return TestbedHarnessEnvironment.loader(toggle.fixture).getHarness(MatRadioGroupHarness);
   }
 
-  function radio(label: string): HTMLInputElement {
-    const found = radios().find((el) => el.closest("label")?.textContent?.includes(label));
-    if (!found) throw new Error(`radio not found: ${label}`);
+  function radioInputs(): HTMLInputElement[] {
+    return [
+      ...toggle.fixture.nativeElement.querySelectorAll("input[type='radio']"),
+    ] as HTMLInputElement[];
+  }
+
+  function inputFor(label: string): HTMLInputElement {
+    const found = radioInputs().find(
+      (input) => input.closest("mat-radio-button")?.textContent?.includes(label) ?? false,
+    );
+    if (!found) {
+      throw new Error(`radio input not found: ${label}`);
+    }
     return found;
   }
 
-  function keyOn(el: HTMLElement | Element, key: string): void {
-    el.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }));
-    fixture.detectChanges();
-  }
+  it("renders a radiogroup with the three contract options", async () => {
+    const group = await groupHarness();
+    const host = await group.host();
+    const buttons = await group.getRadioButtons();
 
-  function optionLabels(): string[] {
-    const root = fixture.nativeElement as HTMLElement;
-    return [...root.querySelectorAll<HTMLLabelElement>("label")].map(
-      (el) => el.textContent?.trim() ?? "",
-    );
-  }
-
-  function checkedLabel(): string | undefined {
-    return radios()
-      .find((el) => el.checked)
-      ?.closest("label")
-      ?.textContent?.trim();
-  }
-
-  it("renders a radiogroup with the three contract options", () => {
-    const group = fixture.nativeElement.querySelector('[role="radiogroup"]') as HTMLElement;
-
-    expect(group).toBeTruthy();
-    expect(group.getAttribute("aria-label")).toBe("Theme");
-    expect(optionLabels()).toEqual(["Light", "Dark", "System"]);
+    expect(await host.getAttribute("role")).toBe("radiogroup");
+    expect(await host.getAttribute("aria-label")).toBe("Theme");
+    expect(await Promise.all(buttons.map(async (button) => button.getLabelText()))).toEqual([
+      "Light",
+      "Dark",
+      "System",
+    ]);
   });
 
-  it("defaults to System checked and roving focus when no choice is stored", () => {
-    const checked = checkedLabel();
+  it("defaults to System checked when no choice is stored", async () => {
+    const group = await groupHarness();
 
-    expect(checked).toBe("System");
-    for (const el of radios()) {
-      const isSystem = el.closest("label")?.textContent?.includes("System") ?? false;
-      expect(el.getAttribute("tabindex")).toBe(isSystem ? "0" : "-1");
+    expect(await group.getCheckedValue()).toBe(CHOICE_SYSTEM);
+  });
+
+  it("groups the options as native radios sharing a name so browser arrow/Home/End navigation applies", () => {
+    const inputs = radioInputs();
+
+    expect(inputs).toHaveLength(3);
+    for (const input of inputs) {
+      expect(input.name).not.toBe("");
     }
+    expect(new Set(inputs.map((input) => input.name)).size).toBe(1);
   });
 
-  it("reflects a stored explicit dark choice", () => {
-    storage = installThemeStorage(CHOICE_DARK);
-
+  it("reflects a stored explicit dark choice", async () => {
+    toggle.storage = installThemeStorage(CHOICE_DARK);
     store().setChoice(CHOICE_DARK);
-    fixture.detectChanges();
+    toggle.fixture.detectChanges();
 
-    expect(checkedLabel()).toBe("Dark");
+    const group = await groupHarness();
+    expect(await group.getCheckedValue()).toBe(CHOICE_DARK);
+    expect(inputFor("Dark").getAttribute("tabindex")).toBe("0");
+    expect(inputFor("System").getAttribute("tabindex")).toBe("-1");
   });
 
-  it("activates a radio through the store: choice, persistence and root marker", () => {
-    radio("Dark").click();
+  it("activates a radio through the store: choice, persistence and root marker", async () => {
+    const group = await groupHarness();
+
+    await group.checkRadioButton({ label: "Dark" });
 
     expect(store().choice()).toBe(CHOICE_DARK);
-    expect(storage.getState()).toBe(CHOICE_DARK);
+    expect(toggle.storage.getState()).toBe(CHOICE_DARK);
     expect(document.documentElement.classList.contains("dark")).toBe(true);
+  });
+
+  it("moves the roving tabindex to the newly selected option", async () => {
+    const group = await groupHarness();
+    await group.checkRadioButton({ label: "Light" });
+    toggle.fixture.detectChanges();
+
+    expect(await group.getCheckedValue()).toBe(CHOICE_LIGHT);
+    expect(inputFor("Light").getAttribute("tabindex")).toBe("0");
+    expect(inputFor("Dark").getAttribute("tabindex")).toBe("-1");
   });
 
   it("repaints the effective theme when System follows the OS", () => {
     expect(store().effective()).toBe("light");
 
-    media.dispatch(true);
+    toggle.media.dispatch(true);
 
     expect(store().effective()).toBe("dark");
     expect(document.documentElement.classList.contains("dark")).toBe(true);
   });
 
-  it("moves selection roving with ArrowRight from Light and wraps past System", () => {
-    store().setChoice(CHOICE_LIGHT);
-    fixture.detectChanges();
-
-    expect(checkedLabel()).toBe("Light");
-
-    keyOn(radio("Light"), "ArrowRight");
-
-    expect(checkedLabel()).toBe("Dark");
-    expect(store().choice()).toBe(CHOICE_DARK);
-    expect(document.activeElement).toBe(radio("Dark"));
-
-    keyOn(radio("Dark"), "ArrowRight");
-
-    expect(checkedLabel()).toBe("System");
-
-    keyOn(radio("System"), "ArrowRight");
-
-    expect(checkedLabel()).toBe("Light");
-    expect(store().choice()).toBe(CHOICE_LIGHT);
-  });
-
-  it("jumps to first and last option with Home and End keys", () => {
-    store().setChoice(CHOICE_DARK);
-    fixture.detectChanges();
-
-    keyOn(radio("Dark"), "End");
-
-    expect(checkedLabel()).toBe("System");
-    expect(document.activeElement).toBe(radio("System"));
-
-    keyOn(radio("System"), "Home");
-
-    expect(checkedLabel()).toBe("Light");
-    expect(document.activeElement).toBe(radio("Light"));
-  });
-
-  it("keeps keyboard focus stable when the OS preference changes", () => {
-    store().setChoice(CHOICE_SYSTEM);
-    fixture.detectChanges();
-    const systemRadio = radio("System");
-    systemRadio.focus();
-
-    media.dispatch(true);
+  it("keeps keyboard focus stable when the OS preference changes", async () => {
+    const group = await groupHarness();
+    const system = (await group.getRadioButtons({ label: "System" }))[0];
+    if (!system) {
+      throw new Error("System radio not found");
+    }
+    await system.focus();
+    toggle.media.dispatch(true);
+    toggle.fixture.detectChanges();
 
     expect(document.documentElement.classList.contains("dark")).toBe(true);
-    expect(document.activeElement).toBe(systemRadio);
+    expect(document.activeElement).toBe(inputFor("System"));
   });
 });
