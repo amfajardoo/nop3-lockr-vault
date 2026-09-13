@@ -117,14 +117,14 @@ describe("Dashboard (feature 006, US2): navigation is accessible and live", () =
   });
 });
 
-describe("Dashboard (feature 006, US3): workspace ready for vault features", () => {
-  it("renders a titled section heading and an empty-state hint", async () => {
+describe("Dashboard (feature 009, US1): workspace ready for the credential list", () => {
+  it("mounts a child route in the workspace instead of the placeholder copy", async () => {
     setupThemeTestBed({ providers: [provideRouter(routes)] });
     const harness = await RouterTestingHarness.create("");
     const main = harness.routeNativeElement?.querySelector("main[id='main-content']");
 
-    expect(main?.querySelector("h1")?.textContent).toBe("Dashboard");
-    expect(main?.textContent).toContain("Your credentials will appear here.");
+    expect(main).toBeTruthy();
+    expect(main?.textContent).not.toContain("Your credentials will appear here.");
   });
 
   it("renders a child route inside the dashboard's nested outlet", async () => {
