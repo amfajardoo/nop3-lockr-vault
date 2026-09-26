@@ -62,13 +62,13 @@ Harnesses exist and cover the assertions we need: `MatFormFieldHarness`
 (`floatingLabelText`, `hasErrors`, `getTextErrors`, `isControlValid`, `getControl`),
 `MatInputHarness`, `MatErrorHarness` (from `@angular/material/{form-field,input}/testing`).
 
-**Open question (T003 spike)**: whether `MatFormField` auto-opens `<mat-error>` from signal-form
-field state alone, or whether visibility must be conditioned on our own touched/submit flag.
-The spec's US3 only requires errors **after a submit attempt**, so the deterministic fallback is:
-render `<mat-error>` content conditioned on `field has error && submit attempted (or field
-touched)`. The spike decides: auto-display → keep markup minimal; otherwise → explicit gating.
-Either way tests assert via `MatFormFieldHarness.getTextErrors()` after submit — the observable
-contract (FR-007) holds regardless of mechanism.
+**Spike outcome (T003, resolved 2026-09-26)**: Material DOES surface `<mat-error>` for a
+`[formField]`-bound `MatInput` — `MatFormFieldHarness.getTextErrors()` returns the message after
+an invalid submit with no extra plumbing beyond our content gating. Mechanism adopted: render
+`<mat-error>` content only while `attempted() && field has errors` (`fieldError()` in the
+component), which satisfies US3 (errors after a submit attempt) and clears reactively when the
+user fixes the field. Tests assert the observable contract via `MatFormFieldHarness` /
+`MatErrorHarness` either way (FR-007).
 
 ### D4. Submission and navigation contract
 
