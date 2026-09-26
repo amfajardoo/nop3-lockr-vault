@@ -1,21 +1,22 @@
 import { inject } from "@angular/core";
 import { TestBed } from "@angular/core/testing";
+import { MatButtonHarness } from "@angular/material/button/testing";
+import { MatCardHarness } from "@angular/material/card/testing";
+import { MatDialogHarness } from "@angular/material/dialog/testing";
+import { MatNavListItemHarness } from "@angular/material/list/testing";
 import { provideRouter } from "@angular/router";
 import { cleanState } from "@testing/clean-state";
-import { createFixture, setupModule } from "@testing/setup-module";
+import {
+  createFixture,
+  documentHarnessLoader,
+  harnessLoader,
+  query,
+  setupModule,
+} from "@testing/setup-module";
 import { VaultStore, type VaultStoreInstance } from "../../vault/vault.store";
 import { CredentialList } from "./credential-list";
 
 const routerProviders = provideRouter([]);
-
-if (!HTMLDialogElement.prototype.showModal) {
-  HTMLDialogElement.prototype.showModal = function () {
-    this.open = true;
-  };
-  HTMLDialogElement.prototype.close = function () {
-    this.open = false;
-  };
-}
 
 function store(): VaultStoreInstance {
   return TestBed.runInInjectionContext(() => inject(VaultStore));
@@ -39,20 +40,19 @@ describe("CredentialList (feature 009, US1): every saved credential renders scan
       favorite: false,
     });
     store().add({ name: "npm", username: "octocat", domain: "npmjs.com", password: "h3" });
+
     return { fixture: createFixture(CredentialList) };
   });
 
-  function rows(): HTMLElement[] {
-    return [
-      ...list.fixture.nativeElement.querySelectorAll("[data-credential-row]"),
-    ] as HTMLElement[];
+  function rows(): Promise<MatNavListItemHarness[]> {
+    return harnessLoader(list.fixture).getAllHarnesses(MatNavListItemHarness);
   }
 
-  it("renders every seeded credential with its name, username and domain", () => {
-    const rendered = rows();
+  it("renders every seeded credential with its name, username and domain", async () => {
+    const rendered = await rows();
 
     expect(rendered).toHaveLength(3);
-    const texts = rendered.map((row) => row.textContent?.replace(/\s+/g, " ").trim() ?? "");
+    const texts = await Promise.all(rendered.map((row) => row.getText()));
     expect(texts[0]).toContain("GitHub");
     expect(texts[0]).toContain("octocat");
     expect(texts[0]).toContain("github.com");
@@ -61,29 +61,35 @@ describe("CredentialList (feature 009, US1): every saved credential renders scan
     expect(texts[2]).toContain("npmjs.com");
   });
 
-  it("marks the favorite credential with a distinct indicator with an aria-label", () => {
-    const first = rows()[0];
-    const second = rows()[1];
+  it("marks the favorite credential with a distinct indicator with an aria-label", async () => {
+    const rendered = await rows();
 
-    const favoriteMark = first?.querySelector("[data-favorite]");
+    const favoriteMark = query<HTMLElement>(list.fixture, "[data-favorite]");
     expect(favoriteMark).toBeTruthy();
     expect(favoriteMark?.getAttribute("aria-label")).toMatch(/favorite/i);
-    expect(second?.querySelector("[data-favorite]")).toBeFalsy();
+    expect(await rendered[0].getText()).toContain("★");
+    expect(await rendered[1].getText()).not.toContain("★");
   });
 
-  it("renders the entries in a deterministic insertion order", () => {
-    const names = rows().map(
-      (row) => row?.querySelector("[data-credential-name]")?.textContent?.trim() ?? "",
-    );
+  it("renders the entries in a deterministic insertion order", async () => {
+    const expectedNames = store()
+      .credentials()
+      .map((entry) => entry.name);
+    const rendered = await rows();
+    const texts = await Promise.all(rendered.map((row) => row.getText()));
 
-    expect(names).toEqual(["GitHub", "GitLab", "npm"]);
+    expect(rendered).toHaveLength(expectedNames.length);
+    expectedNames.forEach((name, index) => {
+      expect(texts[index]).toContain(name);
+    });
   });
 
-  it("links each row to its credential's detail view", () => {
+  it("links each row to its credential's detail view", async () => {
     const credentialIds = store()
       .credentials()
       .map((entry) => entry.id);
-    const hrefs = rows().map((row) => row.getAttribute("href") ?? "");
+    const rendered = await rows();
+    const hrefs = await Promise.all(rendered.map((row) => row.getHref()));
 
     expect(hrefs).toHaveLength(3);
     hrefs.forEach((href, index) => {
@@ -95,25 +101,37 @@ describe("CredentialList (feature 009, US1): every saved credential renders scan
 describe("CredentialList (feature 009, US3): empty vault shows a helpful empty state", () => {
   const list = cleanState(() => {
     setupModule({ providers: [VaultStore, routerProviders] });
+
     return { fixture: createFixture(CredentialList) };
   });
 
-  it("renders the empty state with no credential rows", () => {
-    const root = list.fixture.nativeElement;
-    expect(root.querySelector("[data-empty-state]")).toBeTruthy();
-    expect(root.querySelector("[data-credential-row]")).toBeNull();
-    expect(root.textContent).toContain("Your vault is empty");
+  function emptyState(): Promise<MatCardHarness[]> {
+    return harnessLoader(list.fixture).getAllHarnesses(
+      MatCardHarness.with({ selector: "[data-empty-state]" }),
+    );
+  }
+
+  function rows(): Promise<MatNavListItemHarness[]> {
+    return harnessLoader(list.fixture).getAllHarnesses(MatNavListItemHarness);
+  }
+
+  it("renders the empty state with no credential rows", async () => {
+    const cards = await emptyState();
+    const rendered = await rows();
+
+    expect(cards).toHaveLength(1);
+    expect(await cards[0].getText()).toContain("Your vault is empty");
+    expect(rendered).toHaveLength(0);
   });
 
-  it("transitions from empty to populated when a credential is added", () => {
-    const root = list.fixture.nativeElement;
-    expect(root.querySelector("[data-empty-state]")).toBeTruthy();
+  it("transitions from empty to populated when a credential is added", async () => {
+    expect(await emptyState()).toHaveLength(1);
 
     store().add({ name: "GitHub", username: "octocat", domain: "github.com", password: "h1" });
     list.fixture.detectChanges();
 
-    expect(root.querySelector("[data-empty-state]")).toBeNull();
-    expect(root.querySelector("[data-credential-row]")).toBeTruthy();
+    expect(await emptyState()).toHaveLength(0);
+    expect(await rows()).toHaveLength(1);
   });
 });
 
@@ -122,78 +140,73 @@ describe("CredentialList (feature 009, US4): delete requires explicit confirmati
     setupModule({ providers: [VaultStore, routerProviders] });
     store().add({ name: "GitHub", username: "octocat", domain: "github.com", password: "h1" });
     store().add({ name: "GitLab", username: "octocat", domain: "gitlab.com", password: "h2" });
+
     return { fixture: createFixture(CredentialList) };
   });
 
-  function rows(): HTMLElement[] {
-    return [
-      ...list.fixture.nativeElement.querySelectorAll("[data-credential-row]"),
-    ] as HTMLElement[];
+  function rows(): Promise<MatNavListItemHarness[]> {
+    return harnessLoader(list.fixture).getAllHarnesses(MatNavListItemHarness);
   }
 
-  function openDeleteFor(index: number): void {
-    const row = rows()[index];
-    const li = row?.closest("li") as HTMLLIElement | null;
-    const deleteBtn = li?.querySelector("[data-delete]") as HTMLButtonElement | null;
-    expect(deleteBtn).toBeTruthy();
-    deleteBtn?.click();
-    list.fixture.detectChanges();
+  function dialogs(): Promise<MatDialogHarness[]> {
+    return documentHarnessLoader(list.fixture).getAllHarnesses(MatDialogHarness);
   }
 
-  function dialog(): HTMLDialogElement | null {
-    return list.fixture.nativeElement.querySelector("[data-delete-dialog]");
-  }
-
-  function confirmBtn(): HTMLButtonElement | null {
-    return list.fixture.nativeElement.querySelector(
-      "[data-confirm-delete]",
-    ) as HTMLButtonElement | null;
-  }
-
-  function cancelBtn(): HTMLButtonElement | null {
-    return list.fixture.nativeElement.querySelector(
-      "[data-cancel-delete]",
-    ) as HTMLButtonElement | null;
-  }
-
-  it("opens a confirmation dialog naming the credential, list unchanged", () => {
-    openDeleteFor(0);
-    const dlg = dialog();
-    expect(dlg).toBeTruthy();
-    expect(dlg?.hasAttribute("open")).toBe(true);
-    expect(dlg?.textContent).toContain("GitHub");
-    expect(rows()).toHaveLength(2);
-  });
-
-  it("confirm removes the credential from store and list; other rows unaffected", () => {
-    openDeleteFor(0);
-    confirmBtn()?.click();
-    list.fixture.detectChanges();
-
-    expect(rows()).toHaveLength(1);
-    expect(rows()[0]?.querySelector("[data-credential-name]")?.textContent?.trim()).toBe("GitLab");
-    expect(store().count()).toBe(1);
-    expect(dialog()?.open).toBe(false);
-  });
-
-  it("cancel keeps the credential; no store mutation", () => {
-    openDeleteFor(0);
-    cancelBtn()?.click();
-    list.fixture.detectChanges();
-
-    expect(rows()).toHaveLength(2);
-    expect(store().count()).toBe(2);
-  });
-
-  it("Escape key cancels the dialog", () => {
-    openDeleteFor(0);
-    expect(dialog()?.open).toBe(true);
-    list.fixture.nativeElement.dispatchEvent(
-      new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
+  async function openDialogFor(name: string): Promise<MatDialogHarness> {
+    const deleteButton = await harnessLoader(list.fixture).getHarness(
+      MatButtonHarness.with({ selector: `[aria-label="Delete ${name}"]` }),
     );
-    list.fixture.detectChanges();
 
-    expect(dialog()?.open).toBe(false);
-    expect(rows()).toHaveLength(2);
+    await deleteButton.click();
+    await list.fixture.whenStable();
+
+    return documentHarnessLoader(list.fixture).getHarness(MatDialogHarness);
+  }
+
+  it("opens a confirmation dialog naming the credential, list unchanged", async () => {
+    const dialog = await openDialogFor("GitHub");
+
+    expect(await dialog.getRole()).toBe("dialog");
+    expect(await dialog.getTitleText()).toContain("GitHub");
+    expect(await dialog.getContentText()).toContain("cannot be undone");
+    expect(await rows()).toHaveLength(2);
+
+    await dialog.close();
+  });
+
+  it("confirm removes the credential from store and list; other rows unaffected", async () => {
+    const dialog = await openDialogFor("GitHub");
+
+    const confirmButton = await dialog.getHarness(MatButtonHarness.with({ text: "Delete" }));
+
+    await confirmButton.click();
+
+    const rendered = await rows();
+    expect(rendered).toHaveLength(1);
+    expect(await rendered[0].getText()).toContain("GitLab");
+    expect(store().count()).toBe(1);
+    expect(await dialogs()).toHaveLength(0);
+  });
+
+  it("cancel keeps the credential; no store mutation", async () => {
+    const dialog = await openDialogFor("GitHub");
+
+    const cancelButton = await dialog.getHarness(MatButtonHarness.with({ text: "Cancel" }));
+
+    await cancelButton.click();
+
+    expect(await rows()).toHaveLength(2);
+    expect(store().count()).toBe(2);
+    expect(await dialogs()).toHaveLength(0);
+  });
+
+  it("Escape key cancels the dialog", async () => {
+    const dialog = await openDialogFor("GitHub");
+
+    await dialog.close();
+
+    expect(await rows()).toHaveLength(2);
+    expect(store().count()).toBe(2);
+    expect(await dialogs()).toHaveLength(0);
   });
 });

@@ -1,48 +1,33 @@
-import { Component, computed, type ElementRef, inject, signal, viewChild } from "@angular/core";
+import { Component, computed, inject } from "@angular/core";
+import { MatButtonModule } from "@angular/material/button";
+import { MatCardModule } from "@angular/material/card";
+import { MatDialog } from "@angular/material/dialog";
+import { MatListModule } from "@angular/material/list";
 import { RouterLink } from "@angular/router";
 import type { Credential } from "../../vault/credential.schema";
 import { VaultStore } from "../../vault/vault.store";
+import { CredentialDeleteDialog } from "./credential-delete-dialog";
 
 @Component({
   selector: "credential-list",
-  imports: [RouterLink],
+  imports: [MatButtonModule, MatCardModule, MatListModule, RouterLink],
   templateUrl: "./credential-list.html",
   styleUrl: "./credential-list.css",
-  host: { "(keydown.escape)": "cancelDelete()" },
 })
 export class CredentialList {
+  private readonly dialog = inject(MatDialog);
   protected readonly store = inject(VaultStore);
-  protected readonly pendingDelete = signal<Credential | null>(null);
-  private readonly dialogRef = viewChild.required<ElementRef<HTMLDialogElement>>("deleteDialog");
-
   protected readonly credentials = computed(() => this.store.credentials());
   protected readonly count = computed(() => this.store.count());
 
   protected requestDelete(credential: Credential): void {
-    this.pendingDelete.set(credential);
-    this.dialogRef().nativeElement.showModal();
-  }
-
-  protected confirmDelete(): void {
-    const credential = this.pendingDelete();
-    if (credential) {
-      this.store.delete(credential.id);
-    }
-    this.closeDialog();
-  }
-
-  protected cancelDelete(): void {
-    this.closeDialog();
-  }
-
-  protected onDialogClose(): void {
-    if (this.pendingDelete()) {
-      this.pendingDelete.set(null);
-    }
-  }
-
-  private closeDialog(): void {
-    this.dialogRef().nativeElement.close();
-    this.pendingDelete.set(null);
+    this.dialog
+      .open(CredentialDeleteDialog, { data: { name: credential.name } })
+      .afterClosed()
+      .subscribe((confirmed) => {
+        if (confirmed === true) {
+          this.store.delete(credential.id);
+        }
+      });
   }
 }
