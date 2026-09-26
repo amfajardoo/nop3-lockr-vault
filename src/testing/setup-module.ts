@@ -1,3 +1,5 @@
+import type { HarnessLoader } from "@angular/cdk/testing";
+import { TestbedHarnessEnvironment } from "@angular/cdk/testing/testbed";
 import type { Type } from "@angular/core";
 import { type ComponentFixture, TestBed, type TestModuleMetadata } from "@angular/core/testing";
 
@@ -84,4 +86,46 @@ export function query<T extends Element>(
   selector: string,
 ): T | null {
   return fixture.nativeElement.querySelector(selector) as T | null;
+}
+
+/**
+ * Creates a typed harness loader from a fixture.
+ * Usage: `const loader = harnessLoader(fixture); const toolbar = await loader.getHarness(MatToolbarHarness);`
+ */
+export function harnessLoader(fixture: ComponentFixture<unknown>): HarnessLoader {
+  return TestbedHarnessEnvironment.loader(fixture);
+}
+
+/**
+ * Creates a typed harness loader from a RouterTestingHarness.
+ * Usage: `const loader = routerHarnessLoader(harness); const navList = await loader.getHarness(MatNavListHarness);`
+ */
+export function routerHarnessLoader(
+  harness: import("@angular/router/testing").RouterTestingHarness,
+): HarnessLoader {
+  return TestbedHarnessEnvironment.loader(harness.fixture);
+}
+
+/**
+ * Gets a harness directly from a fixture.
+ * Usage: `const toolbar = await getHarness(fixture, MatToolbarHarness);`
+ */
+export async function getHarness<H extends import("@angular/cdk/testing").ComponentHarness>(
+  fixture: ComponentFixture<unknown>,
+  harnessType: import("@angular/cdk/testing").ComponentHarnessConstructor<H>,
+): Promise<H> {
+  const loader = TestbedHarnessEnvironment.loader(fixture);
+  return loader.getHarness(harnessType);
+}
+
+/**
+ * Gets a harness directly from a RouterTestingHarness.
+ * Usage: `const navList = await getRouterHarness(harness, MatNavListHarness.with({ selector: "[aria-label='Main']" }));`
+ */
+export async function getRouterHarness<H extends import("@angular/cdk/testing").ComponentHarness>(
+  harness: import("@angular/router/testing").RouterTestingHarness,
+  harnessType: import("@angular/cdk/testing").ComponentHarnessConstructor<H>,
+): Promise<H> {
+  const loader = TestbedHarnessEnvironment.loader(harness.fixture);
+  return loader.getHarness(harnessType);
 }

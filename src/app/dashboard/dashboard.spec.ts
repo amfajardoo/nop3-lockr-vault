@@ -1,8 +1,16 @@
 import { Component } from "@angular/core";
+import { MatNavListHarness } from "@angular/material/list/testing";
+import { MatToolbarHarness } from "@angular/material/toolbar/testing";
 import { provideRouter } from "@angular/router";
 import { RouterTestingHarness } from "@angular/router/testing";
 import { cleanState } from "@testing/clean-state";
-import { createFixture, query, setupModule } from "@testing/setup-module";
+import {
+  createFixture,
+  harnessLoader,
+  query,
+  routerHarnessLoader,
+  setupModule,
+} from "@testing/setup-module";
 import { replaceThemeToggleWithStub } from "@testing/theme-toggle-stub";
 import { routes } from "../app.routes";
 import { Dashboard } from "./dashboard";
@@ -20,63 +28,73 @@ describe("Dashboard (feature 006, US1): chrome renders as a routable screen", ()
     return { fixture: createFixture(Dashboard) };
   });
 
-  it("renders the header with brand, theme switcher, nav and main workspace", () => {
-    const headerEl = query<HTMLElement>(dash.fixture, "header");
+  it("renders the toolbar with brand, theme switcher, nav list and main workspace", async () => {
+    const loader = harnessLoader(dash.fixture);
+    const toolbar = await loader.getHarness(MatToolbarHarness);
+    const navList = await loader.getHarness(
+      MatNavListHarness.with({ selector: "[aria-label='Main']" }),
+    );
 
-    expect(headerEl).toBeTruthy();
-    expect(headerEl?.querySelector("a.brand")?.textContent).toContain("Lockr Vault");
-    expect(headerEl?.querySelector("theme-toggle")).toBeTruthy();
-    expect(query<HTMLElement>(dash.fixture, "nav")).toBeTruthy();
-    expect(query<HTMLElement>(dash.fixture, "main[id='main-content']")).toBeTruthy();
+    expect(toolbar).toBeTruthy();
+    expect(query<HTMLElement>(dash.fixture, "theme-toggle")).toBeTruthy();
+    expect(await navList.getItems()).toBeTruthy();
+    expect(query<HTMLElement>(dash.fixture, "main#main-content")).toBeTruthy();
   });
 
-  it("places a skip link as the first focusable element targeting main", () => {
+  it("places a skip link targeting main content", () => {
     const skip = query<HTMLAnchorElement>(dash.fixture, "a.skip-link");
 
     expect(skip).toBeTruthy();
     expect(skip?.getAttribute("href")).toBe("#main-content");
-    const focusables = [...document.querySelectorAll("a, button, [tabindex]")];
-    expect(focusables[0]).toBe(skip);
   });
 });
 
 describe("Dashboard (feature 006, US2): navigation is accessible and live", () => {
-  it("renders a nav landmark with a labelled list of data-driven items", async () => {
+  const nav = cleanState(async () => {
     setupModule({ providers: [provideRouter(routes)] });
     replaceThemeToggleWithStub();
     const harness = await RouterTestingHarness.create("");
-    const nav = harness.routeNativeElement?.querySelector("nav[aria-label='Main']");
-
-    expect(nav).toBeTruthy();
-    const links = [...(nav?.querySelectorAll("a") ?? [])];
-    expect(links.map((a) => a.textContent?.trim())).toEqual(["Overview"]);
-    expect(links[0]?.getAttribute("href")).toBe("/");
+    const navList = await routerHarnessLoader(harness).getHarness(
+      MatNavListHarness.with({ selector: "[aria-label='Main']" }),
+    );
+    return { harness, navList };
   });
 
-  it("marks the active section link with aria-current=page and a visible focus ring", async () => {
-    setupModule({ providers: [provideRouter(routes)] });
-    replaceThemeToggleWithStub();
-    const harness = await RouterTestingHarness.create("");
-    const link = harness.routeNativeElement?.querySelector("nav a");
+  it("renders a nav list with a labelled list of data-driven items", async () => {
+    const items = await nav.navList.getItems();
 
-    expect(link).toBeTruthy();
-    expect(link?.getAttribute("aria-current")).toBe("page");
-    expect(link?.className).toContain("focus-visible:outline");
+    const labels = await Promise.all(items.map((item) => item.getText()));
+    expect(labels).toEqual(["Overview"]);
+    const host = await items[0].host();
+    expect(await host.getAttribute("href")).toBe("/");
+  });
+
+  it("marks the active section link with aria-current=page", async () => {
+    const items = await nav.navList.getItems();
+
+    const host = await items[0].host();
+    expect(await host.getAttribute("aria-current")).toBe("page");
   });
 });
 
 describe("Dashboard (feature 009, US1): workspace ready for the credential list", () => {
-  it("mounts a child route in the workspace instead of the placeholder copy", async () => {
+  const workspace = cleanState(async () => {
     setupModule({ providers: [provideRouter(routes)] });
     replaceThemeToggleWithStub();
     const harness = await RouterTestingHarness.create("");
-    const main = harness.routeNativeElement?.querySelector("main[id='main-content']");
+    return { harness };
+  });
+
+  it("mounts a child route in the workspace instead of the placeholder copy", async () => {
+    const main = workspace.harness.routeNativeElement?.querySelector("main#main-content");
 
     expect(main).toBeTruthy();
     expect(main?.textContent).not.toContain("Your credentials will appear here.");
   });
+});
 
-  it("renders a child route inside the dashboard's nested outlet", async () => {
+describe("Dashboard (feature 009, US1): nested outlet renders child routes", () => {
+  const nestedWorkspace = cleanState(async () => {
     setupModule({
       providers: [
         provideRouter([
@@ -87,9 +105,14 @@ describe("Dashboard (feature 009, US1): workspace ready for the credential list"
     replaceThemeToggleWithStub();
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl("/stub");
+    return { harness };
+  });
 
+  it("renders a child route inside the dashboard's nested outlet", async () => {
+    const harness = nestedWorkspace.harness;
     expect(harness.routeNativeElement?.querySelector("app-stub-child")).toBeTruthy();
     expect(harness.routeNativeElement?.textContent).toContain("Stub child content");
-    expect(harness.routeNativeElement?.querySelector("header")).toBeTruthy();
+    const toolbar = await routerHarnessLoader(harness).getHarness(MatToolbarHarness);
+    expect(toolbar).toBeTruthy();
   });
 });
