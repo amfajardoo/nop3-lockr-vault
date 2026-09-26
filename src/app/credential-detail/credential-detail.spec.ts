@@ -94,3 +94,25 @@ describe("CredentialDetail (feature 009, US2): read-only credential details", ()
     expect(await (await back.host()).getAttribute("href")).toBe("/");
   });
 });
+
+describe("CredentialDetail (feature 014): edit entry point", () => {
+  const detail = cleanState(() => {
+    setupModule({ providers: [VaultStore, provideRouter([])] });
+    store().add({
+      name: "GitHub",
+      username: "octocat",
+      domain: "github.com",
+      password: "hunter2",
+    });
+    return { seededId: store().credentials()[0]?.id ?? "" };
+  });
+
+  it("links to the edit route of the displayed credential", async () => {
+    const fixture = detailFixture(detail.seededId);
+    const edit = await harnessLoader(fixture).getHarness(MatButtonHarness.with({ text: "Edit" }));
+
+    expect(await (await edit.host()).getAttribute("href")).toBe(
+      `/credentials/${detail.seededId}/edit`,
+    );
+  });
+});
