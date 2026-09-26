@@ -1,32 +1,29 @@
-<div class="flex min-h-screen flex-col bg-surface text-foreground">
-  <header class="sticky top-0 z-10 border border-line bg-surface">
-    <a class="skip-link sr-only focus:not-sr-only" href="#main-content">Skip to content</a>
-    <div class="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-6 py-4">
-      <a class="brand text-accent" routerLink="/" href="/">{{ title }}</a>
+<mat-sidenav-container class="sidenav-container">
+  <mat-sidenav #sidenav mode="side" opened class="sidenav">
+    <mat-toolbar class="sidenav-toolbar">
+      <a class="brand" routerLink="/" href="/">{{ title }}</a>
       <theme-toggle />
-    </div>
-  </header>
-  <nav aria-label="Main" class="mx-auto w-full max-w-5xl px-6">
-    <ul class="flex flex-wrap items-center gap-2">
+    </mat-toolbar>
+    <mat-nav-list aria-label="Main">
       @for (item of navItems; track item.route) {
-<li>
-            <!-- biome-ignore lint/a11y/useValidAnchor: RouterLink binds the real href at runtime -->
-            <a
-              #link="routerLinkActive"
-              routerLinkActive
-              class="inline-block rounded px-3 py-2 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent hover:text-foreground"
-              [class.text-muted]="!link.isActive"
-              [class.text-accent]="link.isActive"
-              [routerLink]="item.route"
-              [href]="item.route"
-              ariaCurrentWhenActive="page"
-              >{{ item.label }}</a
-            >
-          </li>
+        <!-- biome-ignore lint/a11y/useValidAnchor: href is set via Angular binding -->
+        <a mat-list-item
+           #link="routerLinkActive"
+           routerLinkActive
+           [routerLink]="item.route"
+           [href]="item.route"
+           ariaCurrentWhenActive="page"
+           [class.active]="link.isActive">
+          {{ item.label }}
+        </a>
       }
-    </ul>
-  </nav>
-  <main id="main-content" class="mx-auto w-full max-w-5xl flex-1 px-6 py-8 text-muted">
-    <router-outlet class="mt-8 block" />
-  </main>
-</div>
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="sidenav-content">
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <main id="main-content">
+      <router-outlet />
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>
