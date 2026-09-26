@@ -97,6 +97,14 @@ export function harnessLoader(fixture: ComponentFixture<unknown>): HarnessLoader
 }
 
 /**
+ * Creates a typed harness loader rooted at the document, for overlay content (dialogs, menus).
+ * Usage: `const loader = documentHarnessLoader(fixture); const dialog = await loader.getHarness(MatDialogHarness);`
+ */
+export function documentHarnessLoader(fixture: ComponentFixture<unknown>): HarnessLoader {
+  return TestbedHarnessEnvironment.documentRootLoader(fixture);
+}
+
+/**
  * Creates a typed harness loader from a RouterTestingHarness.
  * Usage: `const loader = routerHarnessLoader(harness); const navList = await loader.getHarness(MatNavListHarness);`
  */
