@@ -1,10 +1,12 @@
 import { Component, computed, inject, input, signal } from "@angular/core";
+import { MatButtonModule } from "@angular/material/button";
+import { MatCardModule } from "@angular/material/card";
 import { RouterLink } from "@angular/router";
 import { VaultStore } from "../../vault/vault.store";
 
 @Component({
   selector: "credential-detail",
-  imports: [RouterLink],
+  imports: [MatButtonModule, MatCardModule, RouterLink],
   templateUrl: "./credential-detail.html",
   styleUrl: "./credential-detail.css",
 })
