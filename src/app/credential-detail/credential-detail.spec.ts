@@ -1,7 +1,10 @@
 import { inject } from "@angular/core";
 import { type ComponentFixture, TestBed } from "@angular/core/testing";
+import { MatButtonHarness } from "@angular/material/button/testing";
+import { MatCardHarness } from "@angular/material/card/testing";
 import { provideRouter } from "@angular/router";
-import { setupModule } from "@testing/setup-module";
+import { cleanState } from "@testing/clean-state";
+import { getHarness, harnessLoader, query, setupModule } from "@testing/setup-module";
 import { VaultStore, type VaultStoreInstance } from "../../vault/vault.store";
 import { CredentialDetail } from "./credential-detail";
 
@@ -9,10 +12,15 @@ function store(): VaultStoreInstance {
   return TestBed.runInInjectionContext(() => inject(VaultStore));
 }
 
-describe("CredentialDetail (feature 009, US2): read-only credential details", () => {
-  let seededId: string;
+function detailFixture(id: string): ComponentFixture<CredentialDetail> {
+  const fixture = TestBed.createComponent(CredentialDetail);
+  fixture.componentRef.setInput("id", id);
+  fixture.detectChanges();
+  return fixture;
+}
 
-  beforeEach(() => {
+describe("CredentialDetail (feature 009, US2): read-only credential details", () => {
+  const detail = cleanState(() => {
     setupModule({ providers: [VaultStore, provideRouter([])] });
     store().add({
       name: "GitHub",
@@ -21,64 +29,68 @@ describe("CredentialDetail (feature 009, US2): read-only credential details", ()
       password: "hunter2",
       notes: "Work account",
     });
-    seededId = store().credentials()[0]?.id ?? "";
+    return { seededId: store().credentials()[0]?.id ?? "" };
   });
 
-  function detailFixture(id: string): ComponentFixture<CredentialDetail> {
-    const fixture = TestBed.createComponent(CredentialDetail);
-    fixture.componentRef.setInput("id", id);
-    fixture.detectChanges();
-    return fixture;
-  }
+  it("renders name, username, domain and notes for the matched credential", async () => {
+    const fixture = detailFixture(detail.seededId);
+    const card = await getHarness(fixture, MatCardHarness);
+    const heading = query<HTMLHeadingElement>(fixture, "h1");
+    const text = await card.getText();
 
-  function passwordText(root: HTMLElement): string {
-    return root.querySelector("[data-password]")?.textContent?.trim() ?? "";
-  }
-
-  it("renders name, username, domain and notes for the matched credential", () => {
-    const root = detailFixture(seededId).nativeElement as HTMLElement;
-
-    expect(root.textContent).toContain("GitHub");
-    expect(root.textContent).toContain("octocat");
-    expect(root.textContent).toContain("github.com");
-    expect(root.textContent).toContain("Work account");
+    expect(await card.getTitleText()).toBe("GitHub");
+    expect(heading?.textContent?.trim()).toBe("GitHub");
+    expect(text).toContain("octocat");
+    expect(text).toContain("github.com");
+    expect(text).toContain("Work account");
   });
 
-  it("masks the password by default with no plaintext in the DOM", () => {
-    const root = detailFixture(seededId).nativeElement as HTMLElement;
+  it("masks the password by default with no plaintext in the DOM", async () => {
+    const fixture = detailFixture(detail.seededId);
+    const card = await getHarness(fixture, MatCardHarness);
+    const text = await card.getText();
 
-    expect(passwordText(root)).not.toBe("hunter2");
-    expect(root.textContent).not.toContain("hunter2");
+    expect(text).not.toContain("hunter2");
+    expect(text).toContain("••••••••");
   });
 
-  it("reveals the password on activation and re-masks on a second activation", () => {
-    const fixture = detailFixture(seededId);
-    const root = fixture.nativeElement as HTMLElement;
-    const reveal = root.querySelector("[data-reveal]") as HTMLButtonElement | null;
+  it("reveals the password on activation and re-masks on a second activation", async () => {
+    const fixture = detailFixture(detail.seededId);
+    const loader = harnessLoader(fixture);
+    const reveal = await loader.getHarness(MatButtonHarness.with({ text: "Show" }));
 
-    expect(reveal).toBeTruthy();
-    expect(reveal?.getAttribute("aria-pressed")).toBe("false");
+    expect(await (await reveal.host()).getAttribute("aria-pressed")).toBe("false");
+    expect(await (await reveal.host()).getAttribute("aria-label")).toBe("Show password");
 
-    reveal?.click();
+    await reveal.click();
     fixture.detectChanges();
 
-    expect(passwordText(root)).toBe("hunter2");
-    expect(reveal?.getAttribute("aria-pressed")).toBe("true");
+    const revealed = await getHarness(fixture, MatCardHarness);
+    const hide = await loader.getHarness(MatButtonHarness.with({ text: "Hide" }));
 
-    reveal?.click();
+    expect(await revealed.getText()).toContain("hunter2");
+    expect(await (await hide.host()).getAttribute("aria-pressed")).toBe("true");
+    expect(await (await hide.host()).getAttribute("aria-label")).toBe("Hide password");
+
+    await hide.click();
     fixture.detectChanges();
 
-    expect(passwordText(root)).not.toBe("hunter2");
-    expect(reveal?.getAttribute("aria-pressed")).toBe("false");
+    const masked = await getHarness(fixture, MatCardHarness);
+    const showAgain = await loader.getHarness(MatButtonHarness.with({ text: "Show" }));
+
+    expect(await masked.getText()).not.toContain("hunter2");
+    expect(await (await showAgain.host()).getAttribute("aria-pressed")).toBe("false");
   });
 
-  it("shows a friendly not-found state with a back link for an unknown id", () => {
-    const root = detailFixture("00000000-0000-4000-8000-000000000099").nativeElement as HTMLElement;
+  it("shows a friendly not-found state with a back link for an unknown id", async () => {
+    const fixture = detailFixture("00000000-0000-4000-8000-000000000099");
+    const loader = harnessLoader(fixture);
+    const card = await loader.getHarness(MatCardHarness.with({ title: "Credential not found" }));
+    const back = await loader.getHarness(MatButtonHarness.with({ text: "Back to credentials" }));
+    const heading = query<HTMLHeadingElement>(fixture, "h1");
 
-    expect(root.querySelector("[data-not-found]")).toBeTruthy();
-    expect(root.textContent).toContain("not found");
-    const back = root.querySelector("[data-back-to-list]") as HTMLAnchorElement | null;
-    expect(back).toBeTruthy();
-    expect(back?.getAttribute("href")).toBe("/");
+    expect(heading?.textContent?.trim()).toBe("Credential not found");
+    expect(await card.getText()).toContain("not found");
+    expect(await (await back.host()).getAttribute("href")).toBe("/");
   });
 });
