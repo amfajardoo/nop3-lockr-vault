@@ -53,6 +53,17 @@ describe("dashboard token purity (feature 002, US3, reconciled by 006)", () => {
     ).toEqual([]);
   });
 
+  it("references only theme tokens mat.theme() actually emits", () => {
+    const vars = cssVariables(dashboardCss);
+    const notEmitted = vars.filter(
+      (v) => v.startsWith("--mat-sys-spacing-") || v.startsWith("--mat-sys-monospace-"),
+    );
+    expect(
+      notEmitted,
+      `tokens missing from the compiled theme (use rem instead): ${notEmitted.join(", ") || "none"}`,
+    ).toEqual([]);
+  });
+
   it("exercises the palette (surface, on-surface, primary, outline-variant)", () => {
     const vars = cssVariables(dashboardCss);
     for (const token of ["surface", "on-surface", "primary", "outline-variant"]) {
