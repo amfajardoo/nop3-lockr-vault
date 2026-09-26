@@ -210,3 +210,46 @@ describe("CredentialList (feature 009, US4): delete requires explicit confirmati
     expect(await dialogs()).toHaveLength(0);
   });
 });
+
+describe("CredentialList (feature 014): add-credential entry points", () => {
+  const populated = cleanState(() => {
+    setupModule({ providers: [VaultStore, routerProviders] });
+    store().add({ name: "GitHub", username: "octocat", domain: "github.com", password: "h1" });
+
+    return { fixture: createFixture(CredentialList) };
+  });
+
+  it("offers Add credential in the header linking to the create route", async () => {
+    const buttons = await harnessLoader(populated.fixture).getAllHarnesses(
+      MatButtonHarness.with({ text: "Add credential" }),
+    );
+
+    expect(buttons).toHaveLength(1);
+    expect(await (await buttons[0].host()).getAttribute("href")).toBe("/credentials/new");
+  });
+});
+
+describe("CredentialList (feature 014): add entry point on the empty state", () => {
+  const emptyList = cleanState(() => {
+    setupModule({ providers: [VaultStore, routerProviders] });
+
+    return { fixture: createFixture(CredentialList) };
+  });
+
+  it("offers Add credential from the empty state as well", async () => {
+    const buttons = await harnessLoader(emptyList.fixture).getAllHarnesses(
+      MatButtonHarness.with({ text: "Add credential" }),
+    );
+    const hrefs = await Promise.all(
+      buttons.map((button) => button.host().then((host) => host.getAttribute("href"))),
+    );
+
+    expect(buttons).toHaveLength(2);
+    expect(hrefs).toEqual(["/credentials/new", "/credentials/new"]);
+    expect(
+      await harnessLoader(emptyList.fixture).getHarness(
+        MatCardHarness.with({ selector: "[data-empty-state]" }),
+      ),
+    ).toBeTruthy();
+  });
+});
