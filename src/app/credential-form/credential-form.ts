@@ -3,6 +3,7 @@ import { FormField, FormRoot, form, required } from "@angular/forms/signals";
 import { MatButtonModule } from "@angular/material/button";
 import { MatCardModule } from "@angular/material/card";
 import { MatFormFieldModule } from "@angular/material/form-field";
+import { MatIconModule } from "@angular/material/icon";
 import { MatInputModule } from "@angular/material/input";
 import { Router, RouterLink } from "@angular/router";
 import { VaultStore } from "../../vault/vault.store";
@@ -40,6 +41,7 @@ type RequiredField = keyof typeof REQUIRED_MESSAGES;
     MatButtonModule,
     MatCardModule,
     MatFormFieldModule,
+    MatIconModule,
     MatInputModule,
     RouterLink,
   ],
