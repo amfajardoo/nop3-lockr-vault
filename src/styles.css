@@ -1,38 +1,89 @@
 :root {
   color-scheme: light;
 
-  --surface: #ffffff;
-  --surface-raised: #f1f5f9;
-  --foreground: #0f172a;
-  --muted: #475569;
-  --accent: #2563eb;
-  --on-accent: #ffffff;
-  --line: #64748b;
-  --line-subtle: #e2e8f0;
-  --success: #15803d;
-  --warning: #b45309;
-  --error: #b91c1c;
-  --info: #1d4ed8;
+  /* Spacing scale (data-model.md): 4/8/12/16/24/32/48px */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+
+  --font-display: "Space Grotesk", "Roboto", "Helvetica Neue", sans-serif;
+
+  /* Display/headline roles carry the brand font; sizes stay M3 defaults
+     (mat.theme() bakes the family into the shorthand, so it is redeclared). */
+  --mat-sys-display-large: 400 3.562rem / 4rem var(--font-display);
+  --mat-sys-display-medium: 400 2.812rem / 3.25rem var(--font-display);
+  --mat-sys-display-small: 400 2.25rem / 2.75rem var(--font-display);
+  --mat-sys-headline-large: 400 2rem / 2.5rem var(--font-display);
+  --mat-sys-headline-medium: 400 1.75rem / 2.25rem var(--font-display);
+  --mat-sys-headline-small: 400 1.5rem / 2rem var(--font-display);
+  --mat-sys-display-large-font: var(--font-display);
+  --mat-sys-display-medium-font: var(--font-display);
+  --mat-sys-display-small-font: var(--font-display);
+  --mat-sys-headline-large-font: var(--font-display);
+  --mat-sys-headline-medium-font: var(--font-display);
+  --mat-sys-headline-small-font: var(--font-display);
 }
 
 .dark {
   color-scheme: dark;
-
-  --surface: #0f172a;
-  --surface-raised: #1e293b;
-  --foreground: #f1f5f9;
-  --muted: #94a3b8;
-  --accent: #818cf8;
-  --on-accent: #0f172a;
-  --line: #64748b;
-  --line-subtle: #334155;
-  --success: #4ade80;
-  --warning: #fbbf24;
-  --error: #f87171;
-  --info: #a5b4fc;
 }
 
 body {
-  background-color: var(--surface);
-  color: var(--foreground);
+  background-color: var(--mat-sys-background);
+  color: var(--mat-sys-on-surface);
+}
+
+/* Page header (016 FR-001): dominant title, supporting copy, grouped actions. */
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-4);
+  margin: 0 0 var(--space-5);
+}
+
+.page-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.page-header .page-title {
+  margin: 0;
+  font: var(--mat-sys-display-small);
+  color: var(--mat-sys-on-surface);
+}
+
+.page-header .page-lede {
+  margin: 0;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.page-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.page-header--card {
+  margin: 0;
+  padding: var(--space-5) var(--space-5) var(--space-2);
+}
+
+/* Raised card surface (016 FR-002): one level for cards and state cards. */
+.card-raised.mat-mdc-card {
+  background: var(--mat-sys-surface-container-high);
+}
+
+.state-card .state-icon {
+  display: block;
+  margin-bottom: var(--space-2);
+  color: var(--mat-sys-primary);
 }

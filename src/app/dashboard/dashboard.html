@@ -1,9 +1,11 @@
 <mat-sidenav-container class="sidenav-container">
-  <mat-sidenav #sidenav mode="side" opened class="sidenav">
-    <mat-toolbar class="sidenav-toolbar">
-      <a class="brand" routerLink="/" href="/">{{ title }}</a>
-      <theme-toggle />
-    </mat-toolbar>
+  <mat-sidenav
+    #sidenav
+    id="main-navigation"
+    [mode]="wide() ? 'side' : 'over'"
+    [opened]="wide()"
+    class="sidenav"
+  >
     <mat-nav-list aria-label="Main">
       @for (item of navItems; track item.route) {
         <!-- biome-ignore lint/a11y/useValidAnchor: href is set via Angular binding -->
@@ -14,15 +16,37 @@
            [href]="item.route"
            ariaCurrentWhenActive="page"
            [class.active]="link.isActive">
-          {{ item.label }}
+          <mat-icon matListItemIcon aria-hidden="true">{{ item.icon }}</mat-icon>
+          <span matListItemTitle>{{ item.label }}</span>
         </a>
       }
     </mat-nav-list>
   </mat-sidenav>
 
   <mat-sidenav-content class="sidenav-content">
+    <mat-toolbar class="app-bar">
+      @if (!wide()) {
+        <button
+          mat-icon-button
+          type="button"
+          data-menu-toggle
+          (click)="sidenav.toggle()"
+          [attr.aria-expanded]="sidenav.opened"
+          aria-controls="main-navigation"
+          aria-label="Toggle navigation"
+        >
+          <mat-icon aria-hidden="true">menu</mat-icon>
+        </button>
+      }
+      <a class="brand" routerLink="/" href="/">
+        <mat-icon aria-hidden="true">lock</mat-icon>
+        <span>{{ title }}</span>
+      </a>
+      <theme-toggle />
+    </mat-toolbar>
+
     <a class="skip-link" href="#main-content">Skip to content</a>
-    <main id="main-content">
+    <main id="main-content" class="page">
       <router-outlet />
     </main>
   </mat-sidenav-content>

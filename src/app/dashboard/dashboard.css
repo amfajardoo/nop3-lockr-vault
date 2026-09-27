@@ -10,29 +10,43 @@
 }
 
 .sidenav {
-  width: 280px;
+  width: 17.5rem;
   border-right: 1px solid var(--mat-sys-outline-variant);
-}
-
-.sidenav-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid var(--mat-sys-outline-variant);
   background: var(--mat-sys-surface-container);
 }
 
-.brand {
-  color: var(--mat-sys-primary);
-  text-decoration: none;
-  font-weight: 600;
+.sidenav-content {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  background: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
 }
 
-.sidenav-content {
-  padding: 2rem 1.5rem;
-  min-height: calc(100vh - 64px);
+.app-bar {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+  background: var(--mat-sys-surface-container);
+  color: var(--mat-sys-on-surface);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--mat-sys-primary);
+  text-decoration: none;
+  font: var(--mat-sys-title-large);
+}
+
+.brand mat-icon {
+  color: var(--mat-sys-primary);
 }
 
 .skip-link {
@@ -40,7 +54,7 @@
   top: -100%;
   left: 50%;
   transform: translateX(-50%);
-  padding: 0.5rem 1rem;
+  padding: var(--space-2) var(--space-4);
   background: var(--mat-sys-primary);
   color: var(--mat-sys-on-primary);
   border-radius: var(--mat-sys-corner-small);
@@ -52,11 +66,31 @@
   top: 1rem;
 }
 
-.active {
-  color: var(--mat-sys-primary);
+.page {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-5);
+  flex: 1 1 auto;
 }
 
-mat-list-item.active {
+.active {
   background: var(--mat-sys-primary-container);
   color: var(--mat-sys-on-primary-container);
+  --mat-list-list-item-label-text-color: var(--mat-sys-on-primary-container);
+  --mat-list-list-item-hover-label-text-color: var(--mat-sys-on-primary-container);
+  --mat-list-list-item-focus-label-text-color: var(--mat-sys-on-primary-container);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  mat-list-item {
+    transition: background-color 150ms ease;
+  }
+}
+
+@media (hover: hover) {
+  mat-list-item:not(.active):hover {
+    background: var(--mat-sys-surface-container-high);
+  }
 }

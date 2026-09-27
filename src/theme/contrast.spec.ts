@@ -33,49 +33,59 @@ describe("contrastRatio", () => {
     expect(contrastRatio("#000000", "#ffffff")).toBeCloseTo(contrastRatio("#ffffff", "#000000"), 6);
   });
 
-  const lightPairs = [
-    ["#0f172a", "#ffffff", 17.85],
-    ["#475569", "#ffffff", 7.58],
-    ["#2563eb", "#ffffff", 5.17],
-    ["#ffffff", "#2563eb", 5.17],
-    ["#15803d", "#ffffff", 5.02],
-    ["#b45309", "#ffffff", 5.02],
-    ["#b91c1c", "#ffffff", 6.47],
-    ["#1d4ed8", "#ffffff", 6.7],
-    ["#64748b", "#ffffff", 4.76],
+  /**
+   * Documented token pairs for the unified color layer (feature 016, FR-004).
+   * Values mirror what mat.theme() emits for light/dark (research D2).
+   * Text pairs must clear WCAG AA 4.5:1; control-boundary pairs clear 3:1 (1.4.11).
+   * `--mat-sys-outline-variant` is decorative (dividers/surfaces), never the sole
+   * boundary of a control, so it is deliberately not a documented non-text pair.
+   */
+  const lightTextPairs = [
+    ["#191b23", "#faf8ff"], // on-surface / surface
+    ["#191b23", "#ededf9"], // on-surface / surface-container (toolbar, sidenav)
+    ["#191b23", "#e7e7f3"], // on-surface / surface-container-high (cards, hover rows)
+    ["#434655", "#faf8ff"], // on-surface-variant / surface
+    ["#434655", "#ededf9"], // on-surface-variant / surface-container
+    ["#434655", "#e7e7f3"], // on-surface-variant / surface-container-high
+    ["#ffffff", "#0053db"], // on-primary / primary
+    ["#ffffff", "#922fae"], // on-tertiary / tertiary
+    ["#0053db", "#faf8ff"], // primary (links, icons) / surface
+    ["#0053db", "#ededf9"], // primary / surface-container (brand in toolbar)
+    ["#0053db", "#e7e7f3"], // primary / surface-container-high (icons in cards)
+    ["#003ea8", "#dbe1ff"], // on-primary-container / primary-container (active nav)
   ] as const;
 
-  it.each(lightPairs)("light palette: %s on %s ≈ %s:1", (a, b, expected) => {
-    expect(contrastRatio(a, b)).toBeCloseTo(expected, 2);
-  });
-
-  const darkPairs = [
-    ["#f1f5f9", "#0f172a", 16.3],
-    ["#94a3b8", "#0f172a", 6.96],
-    ["#818cf8", "#0f172a", 5.98],
-    ["#4ade80", "#0f172a", 10.25],
-    ["#fbbf24", "#0f172a", 10.69],
-    ["#f87171", "#0f172a", 6.45],
-    ["#a5b4fc", "#0f172a", 8.96],
-    ["#64748b", "#0f172a", 3.75],
+  const darkTextPairs = [
+    ["#e1e2ed", "#11131b"], // on-surface / surface
+    ["#e1e2ed", "#1d1f27"], // on-surface / surface-container (toolbar, sidenav)
+    ["#e1e2ed", "#282a32"], // on-surface / surface-container-high (cards, hover rows)
+    ["#dfe1f4", "#11131b"], // on-surface-variant / surface
+    ["#dfe1f4", "#1d1f27"], // on-surface-variant / surface-container
+    ["#dfe1f4", "#282a32"], // on-surface-variant / surface-container-high
+    ["#002a78", "#b4c5ff"], // on-primary / primary
+    ["#55006c", "#f2afff"], // on-tertiary / tertiary
+    ["#b4c5ff", "#11131b"], // primary (links, icons) / surface
+    ["#b4c5ff", "#1d1f27"], // primary / surface-container (brand in toolbar)
+    ["#b4c5ff", "#282a32"], // primary / surface-container-high (icons in cards)
+    ["#dbe1ff", "#003ea8"], // on-primary-container / primary-container (active nav)
   ] as const;
 
-  it.each(darkPairs)("dark palette: %s on %s ≈ %s:1", (a, b, expected) => {
-    expect(contrastRatio(a, b)).toBeCloseTo(expected, 2);
+  const nonTextPairs = [
+    ["#737686", "#faf8ff"], // outline / surface (light)
+    ["#8d90a0", "#11131b"], // outline / surface (dark)
+  ] as const;
+
+  it.each([...lightTextPairs, ...darkTextPairs])("AA text threshold (≥4.5:1): %s on %s", (a, b) => {
+    expect(contrastRatio(a, b)).toBeGreaterThanOrEqual(4.5);
   });
 
-  it("enforces the AA text threshold (≥4.5:1) on every foreground-invariant pair", () => {
-    const textPairs = [...lightPairs, ...darkPairs].filter(
-      ([a, b]) => !(a === "#64748b" && b === "#0f172a"),
-    );
-    for (const [a, b] of textPairs) {
-      expect(contrastRatio(a, b)).toBeGreaterThanOrEqual(4.5);
-    }
+  it.each(nonTextPairs)("AA non-text threshold (≥3:1): %s on %s", (a, b) => {
+    expect(contrastRatio(a, b)).toBeGreaterThanOrEqual(3);
   });
 
-  it("enforces the AA non-text threshold (≥3:1) on --line pairs", () => {
-    expect(contrastRatio("#64748b", "#ffffff")).toBeGreaterThanOrEqual(3);
-    expect(contrastRatio("#64748b", "#0f172a")).toBeGreaterThanOrEqual(3);
+  it("keeps dark surface levels distinguishable", () => {
+    expect(contrastRatio("#11131b", "#1d1f27")).toBeGreaterThan(1);
+    expect(contrastRatio("#1d1f27", "#282a32")).toBeGreaterThan(1);
   });
 
   it.each(["#not-a-color", "#12345", "rgb(1, 2, 3)"])(
